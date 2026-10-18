@@ -1,0 +1,2394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>熟語パズル 完全版</title>
+<style>
+  * { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    user-select: none; 
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent; 
+  }
+  body {
+    background-color: #0b0f19;
+    color: #0f172a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  /* 16:9 アスペクト比固定 メインコンテナ */
+  #game-container {
+    position: relative;
+    width: 96vw;
+    height: 54vw;
+    max-width: 1200px;
+    max-height: 675px;
+    background: #1e293b;
+    border-radius: 18px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.15);
+    border: 1px solid #334155;
+    overflow: hidden;
+  }
+
+  #track-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  .track-tile {
+    position: absolute;
+    width: clamp(26px, 3.2vw, 36px);
+    height: clamp(26px, 3.2vw, 36px);
+    background: #ffffff;
+    border: 2px solid #94a3b8;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: clamp(9px, 1.1vw, 11px);
+    font-weight: bold;
+    color: #334155;
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s, color 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    transform: translate(-50%, -50%);
+  }
+
+  @keyframes tilePop {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.4); box-shadow: 0 0 18px rgba(74, 222, 128, 0.9); z-index: 30; }
+    100% { transform: translate(-50%, -50%) scale(1); }
+  }
+  .tile-pop {
+    animation: tilePop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .track-tile.active-green {
+    background: #4ade80;
+    border-color: #16a34a;
+    color: #052e16;
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.7);
+  }
+  .track-tile.active-yellow {
+    background: #facc15;
+    border-color: #ca8a04;
+    color: #422006;
+    box-shadow: 0 0 14px rgba(250, 204, 21, 0.9);
+  }
+  .track-tile.active-orbit {
+    background: #38bdf8 !important;
+    border-color: #0284c7 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 18px rgba(56, 189, 248, 1) !important;
+    transform: translate(-50%, -50%) scale(1.3) !important;
+    z-index: 25;
+  }
+  .track-tile.start-tile {
+    background: #38bdf8;
+    border-color: #0284c7;
+    color: #ffffff;
+    font-size: clamp(8px, 1vw, 10px);
+  }
+  .track-tile.goal-tile {
+    background: #f87171;
+    border-color: #dc2626;
+    color: #ffffff;
+    font-size: clamp(8px, 1vw, 10px);
+    animation: pulse-goal 1.5s infinite;
+  }
+
+  @keyframes pulse-goal {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.12); }
+  }
+
+  #main-content {
+    position: absolute;
+    top: clamp(38px, 8.2%, 60px);
+    left: clamp(38px, 8.2%, 60px);
+    right: clamp(38px, 8.2%, 60px);
+    bottom: clamp(38px, 8.2%, 60px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: clamp(6px, 1.2vw, 12px) clamp(10px, 1.8vw, 18px);
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #cbd5e1;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+  }
+
+  #header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: clamp(4px, 1vw, 12px);
+    flex-wrap: nowrap;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: clamp(4px, 0.8vw, 10px);
+    flex-shrink: 0;
+    min-width: 0;
+  }
+  .stat-box {
+    font-size: clamp(11px, 1.3vw, 15px);
+    font-weight: 700;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 4px clamp(6px, 1.2vw, 14px);
+    border-radius: 20px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+  #stage-display { 
+    color: #2563eb; 
+    flex-shrink: 0;
+    min-width: max-content;
+  }
+  #points-display { color: #d97706; background: #fffbe6; border-color: #fde68a; flex-shrink: 0; }
+  #points-display.rolling {
+    transform: scale(1.1);
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #b45309;
+  }
+  #timer-display { color: #b45309; font-size: clamp(12px, 1.4vw, 16px); background: #fffbe6; border-color: #fde68a; flex-shrink: 0; }
+
+  .sound-btn {
+    cursor: pointer;
+    font-size: clamp(10px, 1.1vw, 13px);
+    font-weight: bold;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 4px clamp(6px, 1vw, 12px);
+    border-radius: 20px;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .sound-btn:hover { background: #e2e8f0; }
+
+  #workspace {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    gap: clamp(8px, 1.5vw, 16px);
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  #idiom-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(4px, 1vw, 10px);
+    justify-content: center;
+    height: 100%;
+    min-width: 0;
+  }
+  .idiom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: clamp(4px, 0.8vw, 8px) clamp(6px, 1.2vw, 14px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    min-width: 0;
+  }
+  .meaning-text {
+    flex: 1;
+    color: #1e293b;
+    font-size: clamp(13px, 1.4vw, 16px);
+    font-weight: 700;
+    padding-right: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .slots-container {
+    display: flex;
+    gap: clamp(4px, 0.8vw, 8px);
+    position: relative;
+    padding: 3px 0;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .reading-display {
+    position: absolute;
+    top: -16px;
+    left: 0; right: 0;
+    text-align: center;
+    color: #059669;
+    font-size: clamp(10px, 1.1vw, 13px);
+    font-weight: bold;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .reading-display.show { opacity: 1; }
+
+  .drop-slot {
+    width: clamp(32px, 3.8vw, 46px);
+    height: clamp(32px, 3.8vw, 46px);
+    border: 2px dashed #93c5fd;
+    border-radius: 8px;
+    background: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+    margin: 2px 0;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .drop-slot.filled {
+    border-style: solid;
+    border-color: #10b981;
+    background: #f0fdf4;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
+  }
+  .drop-slot.filled .hint-text {
+    display: none;
+  }
+
+  .hint-text {
+    position: absolute;
+    color: #cbd5e1;
+    font-size: clamp(16px, 2vw, 22px);
+    font-weight: bold;
+    pointer-events: none;
+    z-index: 1;
+    user-select: none;
+  }
+
+  .hint-btn {
+    width: clamp(28px, 3vw, 36px);
+    height: clamp(28px, 3vw, 36px);
+    border-radius: 8px;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #d97706;
+    font-size: clamp(9px, 1vw, 11px);
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 4px;
+    padding: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .hint-btn:hover {
+    background: #fde68a;
+    transform: translateY(-1px);
+  }
+  .hint-btn.used {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #94a3b8;
+  }
+
+  #card-pool-container {
+    width: clamp(160px, 22vw, 240px);
+    height: 100%;
+    max-height: 380px;
+    background: #ffffff;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: clamp(6px, 1vw, 10px);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    flex-shrink: 0;
+  }
+
+  .pool-title {
+    font-size: clamp(10px, 1vw, 12px);
+    font-weight: 700;
+    color: #64748b;
+    text-align: center;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  #card-pool {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    gap: clamp(4px, 0.8vw, 8px);
+    overflow-y: auto;
+    padding: 2px;
+  }
+
+  .pool-slot {
+    width: clamp(30px, 3.5vw, 42px);
+    height: clamp(30px, 3.5vw, 42px);
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .kanji-card {
+    width: clamp(30px, 3.5vw, 42px);
+    height: clamp(30px, 3.5vw, 42px);
+    background: linear-gradient(135deg, #ffffff, #f1f5f9);
+    color: #0f172a;
+    font-size: clamp(16px, 2vw, 22px);
+    font-weight: bold;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+    cursor: grab;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    touch-action: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+  .kanji-card:active { cursor: grabbing; transform: scale(1.08); }
+  .kanji-card.selected {
+    transform: scale(1.08);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    outline: 3px solid #3b82f6;
+  }
+  .kanji-card.correct {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    color: #15803d;
+    border-color: #86efac;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  .modal-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    animation: fadeIn 0.3s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #0f172a;
+    padding: 28px 36px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    max-width: 440px;
+    width: 88%;
+  }
+  .modal-card h2 { font-size: 26px; margin-bottom: 12px; color: #ef4444; }
+  .modal-card h2.win { color: #10b981; }
+  .modal-card p { color: #475569; font-size: 15px; margin-bottom: 20px; line-height: 1.5; }
+
+  .stage-clear-banner {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    padding: 24px 32px;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(16, 185, 129, 0.3);
+    text-align: center;
+    animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .stage-clear-banner h2 { color: #ffffff; font-size: 28px; margin-bottom: 8px; }
+  .stage-clear-banner p { color: #ecfdf5; font-size: 16px; margin-bottom: 0; }
+
+  /* スタート画面 */
+  .start-hero-card {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+    border: 2px solid #6366f1;
+    color: #ffffff;
+    padding: 28px 24px;
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(99, 102, 241, 0.4), inset 0 0 20px rgba(168, 85, 247, 0.2);
+    max-width: 460px;
+    width: 90%;
+    position: relative;
+    overflow: hidden;
+  }
+  .start-hero-card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    animation: pulseBg 4s infinite alternate;
+  }
+  @keyframes pulseBg {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    100% { transform: scale(1.2); opacity: 1; }
+  }
+
+  .puzzle-piece-container {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 10px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.85));
+    animation: pieceFloat 3s ease-in-out infinite alternate;
+  }
+  @keyframes pieceFloat {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-8px) rotate(5deg); }
+  }
+
+  .start-hero-title {
+    font-size: clamp(28px, 4.2vw, 38px);
+    font-weight: 900;
+    letter-spacing: 3px;
+    background: linear-gradient(135deg, #38bdf8, #a855f7, #f43f5e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+    margin-bottom: 8px;
+  }
+  .start-hero-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    background: rgba(99, 102, 241, 0.2);
+    border: 1px solid #818cf8;
+    border-radius: 20px;
+    color: #c7d2fe;
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .start-hero-desc {
+    color: #cbd5e1;
+    font-size: clamp(12px, 1.5vw, 14px);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .start-play-btn {
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 800;
+    padding: 12px 40px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(168, 85, 247, 0.5), 0 0 15px rgba(99, 102, 241, 0.5);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    letter-spacing: 1px;
+  }
+  .start-play-btn:hover {
+    transform: scale(1.06) translateY(-2px);
+    box-shadow: 0 14px 30px rgba(168, 85, 247, 0.7), 0 0 25px rgba(99, 102, 241, 0.8);
+  }
+
+  #stage-zoom-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+  #stage-zoom-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .stage-zoom-text {
+    font-size: clamp(28px, 6.5vw, 72px);
+    font-weight: 900;
+    font-style: italic;
+    color: #ffffff;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #60a5fa, #a855f7, #f43f5e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 10px 20px rgba(168, 85, 247, 0.6));
+    transform: scale(0);
+    white-space: nowrap;
+    max-width: 100%;
+    text-align: center;
+  }
+  .stage-zoom-text.animate {
+    animation: stageZoomIn 1.1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  @keyframes stageZoomIn {
+    0% { transform: scale(0.1); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 1; }
+    80% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.05); opacity: 0; }
+  }
+
+  /* ゴールボーナス専用ダイアログ演出 */
+  .bonus-banner {
+    background: linear-gradient(135deg, #f59e0b, #d97706, #b45309);
+    border: 3px solid #fef08a;
+    color: #ffffff;
+    padding: 28px 36px;
+    border-radius: 24px;
+    box-shadow: 0 0 50px rgba(245, 158, 11, 0.8), inset 0 0 20px rgba(254, 240, 138, 0.4);
+    text-align: center;
+    animation: bonusPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    max-width: 480px;
+    width: 90%;
+  }
+  @keyframes bonusPop {
+    0% { transform: scale(0.3) rotate(-5deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .bonus-banner h2 {
+    font-size: clamp(26px, 3.8vw, 34px);
+    font-weight: 900;
+    margin-bottom: 12px;
+    text-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    color: #fffde7;
+  }
+  .bonus-amount {
+    font-size: clamp(36px, 5vw, 52px);
+    font-weight: 900;
+    color: #fef08a;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    margin: 10px 0;
+    letter-spacing: 2px;
+  }
+
+  /* ボーナスステージ用スタイル */
+  .special-stage-container {
+    background: linear-gradient(135deg, #0f172a, #1e1b4b);
+    border: 2px solid #818cf8;
+    border-radius: 20px;
+    padding: 16px clamp(12px, 2vw, 24px);
+    width: 94%;
+    max-width: 900px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(129, 140, 248, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .special-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #ffffff;
+    border-bottom: 1px solid #3730a3;
+    padding-bottom: 8px;
+  }
+  .special-title {
+    font-size: clamp(16px, 2.2vw, 22px);
+    font-weight: 900;
+    color: #fbbf24;
+    letter-spacing: 1px;
+  }
+  .special-theme-box {
+    background: rgba(99, 102, 241, 0.25);
+    border: 1px solid #818cf8;
+    padding: 6px 16px;
+    border-radius: 12px;
+    font-size: clamp(14px, 1.8vw, 18px);
+    font-weight: 800;
+    color: #e0e7ff;
+  }
+  .special-timer {
+    font-size: clamp(16px, 2vw, 20px);
+    font-weight: bold;
+    color: #f87171;
+  }
+
+  .special-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: clamp(4px, 0.8vw, 8px);
+    width: 100%;
+    max-width: 820px;
+    aspect-ratio: 8 / 4.2;
+  }
+  .special-panel {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    border: 1px solid #64748b;
+    border-radius: 8px;
+    color: #f8fafc;
+    font-size: clamp(16px, 2.3vw, 26px);
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.1s, background-color 0.2s, border-color 0.2s;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+  .special-panel:hover {
+    transform: scale(1.05);
+    border-color: #a5f3fc;
+  }
+  .special-panel.hit {
+    background: linear-gradient(135deg, #15803d, #22c55e) !important;
+    border-color: #86efac !important;
+    color: #ffffff !important;
+    cursor: default;
+    transform: scale(0.95);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+  }
+  .special-panel.miss {
+    background: linear-gradient(135deg, #991b1b, #ef4444) !important;
+    border-color: #fca5a5 !important;
+    animation: shake 0.3s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  .modal-btns { display: flex; gap: 12px; justify-content: center; }
+  .btn {
+    padding: 10px 22px; font-size: 14px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-retry { background: #10b981; color: #fff; }
+  .btn-quit { background: #64748b; color: #fff; }
+  .btn-next { background: #3b82f6; color: #fff; }
+
+  #confetti-canvas {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 90;
+  }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <canvas id="confetti-canvas"></canvas>
+  <div id="track-container"></div>
+
+  <!-- STAGE 〇 ズームイン演出用オーバーレイ -->
+  <div id="stage-zoom-overlay">
+    <div id="stage-zoom-text" class="stage-zoom-text">STAGE 1</div>
+  </div>
+
+  <div id="main-content">
+    <div id="header">
+      <div class="header-left">
+        <div class="stat-box" id="stage-display">🚩 STAGE 1</div>
+        <div class="stat-box" id="points-display">⭐ 0 pt</div>
+      </div>
+      <div class="stat-box" id="timer-display">⏱ 2:00</div>
+      <button class="sound-btn" id="sound-btn" onclick="toggleSound()">🔊 ON</button>
+    </div>
+
+    <div id="workspace">
+      <!-- 左側：問題リスト (5行) -->
+      <div id="idiom-list"></div>
+
+      <!-- 右側：漢字カード置き場 -->
+      <div id="card-pool-container">
+        <div class="pool-title">漢字カード（スワイプ）</div>
+        <div id="card-pool" ondragover="allowDrop(event)" ondrop="dropToPool(event)"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  return false;
+});
+
+document.addEventListener('touchstart', (e) => {
+  if (e.touches.length > 1) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+const IDIOM_2CHAR_DATABASE = [
+  { word: "挨拶", reading: "あいさつ", meaning: "出会った時や別れ際の礼儀の言葉" },
+  { word: "愛情", reading: "あいじょう", meaning: "人を愛し慈しむ深い心" },
+  { word: "合図", reading: "あいず", meaning: "身振りや音などで意図を伝えること" },
+  { word: "曖昧", reading: "あいまい", meaning: "態度や意味がはっきりしない様子" },
+  { word: "悪化", reading: "あっか", meaning: "事態や状態が悪くなること" },
+  { word: "悪魔", reading: "あくま", meaning: "人を惑わし害を与えるおそろしい存在" },
+  { word: "握手", reading: "あくしゅ", meaning: "互いに手を握り合って挨拶すること" },
+  { word: "圧力", reading: "あつりょく", meaning: "物体を押す力・威圧する力" },
+  { word: "圧迫", reading: "あっぱく", meaning: "強く押しつけて圧力をかけること" },
+  { word: "暗記", reading: "あんき", meaning: "書いたものをよく覚えて暗誦すること" },
+  { word: "暗黒", reading: "あんこく", meaning: "光がなく真っ暗なこと" },
+  { word: "暗示", reading: "あんじ", meaning: "それとなく察せられるように示すこと" },
+  { word: "安心", reading: "あんしん", meaning: "心が落ち着いて心配がないこと" },
+  { word: "安全", reading: "あんぜん", meaning: "危険がなく安心できる状態" },
+  { word: "安定", reading: "あんてい", meaning: "物事が落ち着いて変動がないこと" },
+  { word: "案内", reading: "あんない", meaning: "事情や場所を教え導くこと" },
+  { word: "委員", reading: "いいん", meaning: "委任された特定の任務を行う人" },
+  { word: "委託", reading: "いたく", meaning: "人に業務などをゆだね任せること" },
+  { word: "委任", reading: "いにん", meaning: "仕事や権限を人に任せること" },
+  { word: "威圧", reading: "いあつ", meaning: "威勢で相手をおさえつけること" },
+  { word: "意思", reading: "いし", meaning: "何かを行おうとする考え" },
+  { word: "意志", reading: "いし", meaning: "目的をやり遂げようとする強い心" },
+  { word: "意識", reading: "いしき", meaning: "物事を認識する心のはたらき" },
+  { word: "意見", reading: "いけん", meaning: "ある事柄に対する自分の考え" },
+  { word: "意向", reading: "いこう", meaning: "どうしたいかという考えや気持ち" },
+  { word: "移植", reading: "いしょく", meaning: "他の場所へ移し植えること" },
+  { word: "移住", reading: "いじゅう", meaning: "他の土地へ住まいを移すこと" },
+  { word: "移動", reading: "いどう", meaning: "位置を動かす・移ること" },
+  { word: "移行", reading: "いこう", meaning: "別の状態・段階へ移っていくこと" },
+  { word: "意図", reading: "いと", meaning: "目的や企み・ねらい" },
+  { word: "維持", reading: "いじ", meaning: "状態を保ち続けること" },
+  { word: "異議", reading: "いぎ", meaning: "他と異なる意見・反対の言葉" },
+  { word: "意味", reading: "いみ", meaning: "言葉の表す内容や価値" },
+  { word: "異常", reading: "いじょう", meaning: "通常と異なっていること" },
+  { word: "依存", reading: "いぞん", meaning: "他に頼って存在すること" },
+  { word: "偉大", reading: "いだい", meaning: "秀でてすぐれている様子" },
+  { word: "違反", reading: "いはん", meaning: "規則や法律に背くこと" },
+  { word: "衣服", reading: "いふく", meaning: "身に着ける衣類" },
+  { word: "医療", reading: "いりょう", meaning: "医術で病気やケガを治療すること" },
+  { word: "印象", reading: "いんしょう", meaning: "心に強く受ける感じ" },
+  { word: "印刷", reading: "いんさつ", meaning: "文字や画像を紙等に刷り出すこと" },
+  { word: "引退", reading: "いんたい", meaning: "役職や現役を退くこと" },
+  { word: "引用", reading: "いんよう", meaning: "他の文や説をひいて用いること" },
+  { word: "因果", reading: "いんが", meaning: "原因と結果のつながり" },
+  { word: "宇宙", reading: "うちゅう", meaning: "あらゆる天体が存在する空間" },
+  { word: "羽化", reading: "うか", meaning: "昆虫が成虫になること" },
+  { word: "迂回", reading: "うかい", meaning: "回り道をして進むこと" },
+  { word: "運営", reading: "うんえい", meaning: "組織や会合を取り仕切ること" },
+  { word: "運動", reading: "うんどう", meaning: "体を動かすことやスポーツ" },
+  { word: "運輸", reading: "うんゆ", meaning: "人や物を運ぶこと" },
+  { word: "運命", reading: "うんめい", meaning: "人間の力を超えた巡り合わせ" },
+  { word: "影響", reading: "えいきょう", meaning: "他に働きかけて変化を与えること" },
+  { word: "営業", reading: "えいぎょう", meaning: "営利目的で事業を行うこと" },
+  { word: "衛生", reading: "えいせい", meaning: "健康を守り病気を防ぐこと" },
+  { word: "栄光", reading: "えいこう", meaning: "輝かしい名誉とほまれ" },
+  { word: "永久", reading: "えいきゅう", meaning: "いつまでも変わらず続くこと" },
+  { word: "映像", reading: "えいぞう", meaning: "レンズで映し出された画像" },
+  { word: "英雄", reading: "えいゆう", meaning: "秀でた能力で偉業を成す人" },
+  { word: "閲覧", reading: "えつらん", meaning: "書物や書類を開いて見ること" },
+  { word: "演劇", reading: "えんげき", meaning: "舞台で演じる劇" },
+  { word: "演奏", reading: "えんそう", meaning: "楽器を奏でること" },
+  { word: "演習", reading: "えんしゅう", meaning: "練習や実地訓練を行うこと" },
+  { word: "演説", reading: "えんせつ", meaning: "大衆の前で考えを述べること" },
+  { word: "延長", reading: "えんちょう", meaning: "期間や長さを伸ばすこと" },
+  { word: "援助", reading: "えんじょ", meaning: "困っている人を手助けすること" },
+  { word: "遠足", reading: "えんそく", meaning: "日帰りで野外へ出かけること" },
+  { word: "沿革", reading: "えんかく", meaning: "組織や歴史の移り変わり" },
+  { word: "沿岸", reading: "えんがん", meaning: "海や湖に沿った陸地" },
+  { word: "汚染", reading: "おせん", meaning: "有害物質などで汚れること" },
+  { word: "汚職", reading: "おしょく", meaning: "職務を利用した不正行為" },
+  { word: "温暖", reading: "おんだん", meaning: "気候が暖かく穏やかなこと" },
+  { word: "温室", reading: "おんしつ", meaning: "植物育成用の暖かい部屋" },
+  { word: "温泉", reading: "おんせん", meaning: "地中から湧き出る温かい泉" },
+  { word: "音楽", reading: "おんがく", meaning: "音による芸術表現" },
+  { word: "音響", reading: "おんきょう", meaning: "音とその響き" },
+  { word: "海外", reading: "かいがい", meaning: "外国の土地・諸国" },
+  { word: "開始", reading: "かいし", meaning: "事物を始めること" },
+  { word: "解決", reading: "かいけつ", meaning: "問題や事件を片付けること" },
+  { word: "改造", reading: "かいぞう", meaning: "作り直して改めること" },
+  { word: "改正", reading: "かいせい", meaning: "規則や法律を正しく改めること" },
+  { word: "改革", reading: "かいかく", meaning: "制度などを改めて良くすること" },
+  { word: "改良", reading: "かいりょう", meaning: "欠点を改めて良くすること" },
+  { word: "会談", reading: "かいだん", meaning: "話し合いを行うこと" },
+  { word: "会議", reading: "かいぎ", meaning: "意見を出し合い話し合う場" },
+  { word: "会計", reading: "かいけい", meaning: "金銭の出納や計算" },
+  { word: "会社", reading: "かいしゃ", meaning: "営利を目的に設立された法人" },
+  { word: "会場", reading: "かいじょう", meaning: "集会や催しを行う場所" },
+  { word: "解放", reading: "かいほう", meaning: "束縛から解き放つこと" },
+  { word: "解説", reading: "かいせつ", meaning: "物事の意味や理由を説明すること" },
+  { word: "解析", reading: "かいせき", meaning: "事物を細かく分析・解明すること" },
+  { word: "解答", reading: "かいとう", meaning: "問いや問題に答えること" },
+  { word: "解散", reading: "かいさん", meaning: "集まりを解いて散ること" },
+  { word: "開発", reading: "かいはつ", meaning: "土地や技術を切り開くこと" },
+  { word: "快適", reading: "かいてき", meaning: "心地よく満ち足りていること" },
+  { word: "概要", reading: "がいよう", meaning: "物事のあらまし・要点" },
+  { word: "概念", reading: "がいねん", meaning: "物事の共通の考えや意味" },
+  { word: "外交", reading: "がいこう", meaning: "他国との話し合いや交渉" },
+  { word: "外観", reading: "がいかん", meaning: "外側の見栄え・姿" },
+  { word: "外部", reading: "がいぶ", meaning: "外側の部分・組織の外" },
+  { word: "各地", reading: "かくち", meaning: "それぞれの土地・場所" },
+  { word: "獲得", reading: "かくとく", meaning: "努力して手に入れること" },
+  { word: "確認", reading: "かくにん", meaning: "確かめて認めること" },
+  { word: "確定", reading: "かくてい", meaning: "はっきりと決まること" },
+  { word: "拡散", reading: "かくさん", meaning: "広がり散らばること" },
+  { word: "拡大", reading: "かくだい", meaning: "規模や範囲を広げること" },
+  { word: "拡張", reading: "かくちょう", meaning: "広げて拡張すること" },
+  { word: "革命", reading: "かくめい", meaning: "社会構造の劇的な変革" },
+  { word: "格好", reading: "かっこう", meaning: "姿かたち・身なり" },
+  { word: "活動", reading: "かつどう", meaning: "働き動くこと" },
+  { word: "活用", reading: "かつよう", meaning: "生かして有効に使うこと" },
+  { word: "活躍", reading: "かつやく", meaning: "目覚ましく活動すること" },
+  { word: "感動", reading: "かんどう", meaning: "深く心に感じ動かされること" },
+  { word: "感情", reading: "かんじょう", meaning: "喜怒哀楽などの気持ち" },
+  { word: "感覚", reading: "かんかく", meaning: "五感による感じ取り" },
+  { word: "感謝", reading: "かんしゃ", meaning: "ありがたく思いお礼を伝えること" },
+  { word: "感心", reading: "かんしん", meaning: "感銘を受けて感心すること" },
+  { word: "感染", reading: "かんせん", meaning: "病原体が体内に侵入すること" },
+  { word: "観察", reading: "かんさつ", meaning: "物事の状態や変化をよく調べること" },
+  { word: "観客", reading: "かんきゃく", meaning: "劇や試合を見に来た人々" },
+  { word: "観光", reading: "かんこう", meaning: "他の土地の風景を訪ね見ること" },
+  { word: "観念", reading: "かんねん", meaning: "心にいだく考え・あきらめること" },
+  { word: "管理", reading: "かんり", meaning: "状態を良好に保ち統制すること" },
+  { word: "完了", reading: "かんりょう", meaning: "すべて終わること" },
+  { word: "完成", reading: "かんせい", meaning: "作り上げ完結すること" },
+  { word: "関心", reading: "かんしん", meaning: "興味や関心を持つこと" },
+  { word: "関係", reading: "かんけい", meaning: "つながりや関わり合い" },
+  { word: "関連", reading: "かんれん", meaning: "互いに深くつながること" },
+  { word: "幹部", reading: "かんぶ", meaning: "組織の中心となる人々" },
+  { word: "環境", reading: "かんきょう", meaning: "取り巻く周りの状況" },
+  { word: "歓迎", reading: "かんげい", meaning: "喜んで迎えること" },
+  { word: "換気", reading: "かんき", meaning: "空気を入れ替えること" },
+  { word: "官庁", reading: "かんちょう", meaning: "国や地方の行政機関" },
+  { word: "看護", reading: "かんご", meaning: "病人やケガ人の世話をすること" },
+  { word: "記憶", reading: "きおく", meaning: "覚えていること・忘れないこと" },
+  { word: "企画", reading: "きかく", meaning: "計画を立て企てること" },
+  { word: "規格", reading: "きかく", meaning: "標準となる定め・基準" },
+  { word: "企業", reading: "きぎょう", meaning: "事業を行う組織体" },
+  { word: "危険", reading: "きけん", meaning: "あやうく危害を受けるおそれ" },
+  { word: "期限", reading: "きげん", meaning: "決められた期日・期間" },
+  { word: "期待", reading: "きたい", meaning: "当てにして心待ちにすること" },
+  { word: "奇跡", reading: "きせき", meaning: "常識では考えられない不思議な出来事" },
+  { word: "貴重", reading: "きちょう", meaning: "価値が高く大切なこと" },
+  { word: "記録", reading: "きろく", meaning: "書き記して残すこと" },
+  { word: "規律", reading: "きりつ", meaning: "守るべき決まり・秩序" },
+  { word: "規則", reading: "きそく", meaning: "行動の基準となる定め" },
+  { word: "規模", reading: "きぼ", meaning: "事物の大きさ・構造の程度" },
+  { word: "基地", reading: "きち", meaning: "活動の拠点となる場所" },
+  { word: "基礎", reading: "きそ", meaning: "物事の土台・基本" },
+  { word: "季節", reading: "きせつ", meaning: "春夏秋冬などの時期" },
+  { word: "気候", reading: "きこう", meaning: "一年を通じた天候の状態" },
+  { word: "気分", reading: "きぶん", meaning: "心や体の状態・気持ち" },
+  { word: "気温", reading: "きおん", meaning: "大気の温度" },
+  { word: "義務", reading: "ぎむ", meaning: "果たさなければならない務め" },
+  { word: "疑問", reading: "ぎもん", meaning: "疑わしく思うこと・問い" },
+  { word: "疑惑", reading: "ぎわく", meaning: "疑わしく不審に思うこと" },
+  { word: "議論", reading: "ぎろん", meaning: "互いに意見をたたかわすこと" },
+  { word: "議題", reading: "ぎだい", meaning: "討論・審議の題目" },
+  { word: "技術", reading: "ぎじゅつ", meaning: "事物を扱う手際や技" },
+  { word: "犠牲", reading: "ぎせい", meaning: "目的のために捧げられるもの" },
+  { word: "巨大", reading: "きょだい", meaning: "きわめて大きいこと" },
+  { word: "許可", reading: "きょか", meaning: "願いを聞き入れて許すこと" },
+  { word: "拒否", reading: "きょひ", meaning: "断り拒むこと" },
+  { word: "居住", reading: "きょじゅう", meaning: "ある場所に住むこと" },
+  { word: "距離", reading: "きょり", meaning: "隔たり・長さ" },
+  { word: "協力", reading: "きょうりょく", meaning: "同じ目的のために力を合わせること" },
+  { word: "協定", reading: "きょうてい", meaning: "相談して取り決めること" },
+  { word: "協議", reading: "きょうぎ", meaning: "話し合って決めること" },
+  { word: "協会", reading: "きょうかい", meaning: "同じ目的で結成された会" },
+  { word: "共同", reading: "きょうどう", meaning: "複数の人が一緒に行うこと" },
+  { word: "共通", reading: "きょうつう", meaning: "双方に共通していること" },
+  { word: "強調", reading: "きょうちょう", meaning: "強く主張・強調すること" },
+  { word: "強制", reading: "きょうせい", meaning: "無理にやらせること" },
+  { word: "競争", reading: "きょうそう", meaning: "互いに競い合うこと" },
+  { word: "恐怖", reading: "きょうふ", meaning: "恐ろしく思うこと" },
+  { word: "恐慌", reading: "きょうこう", meaning: "恐れから混乱すること" },
+  { word: "教養", reading: "きょうよう", meaning: "学問や品位を高める知識" },
+  { word: "教育", reading: "きょういく", meaning: "知識や道徳を教え育てること" },
+  { word: "教師", reading: "きょうし", meaning: "学問や技芸を教える人" },
+  { word: "教室", reading: "きょうしつ", meaning: "授業を行う部屋" },
+  { word: "興味", reading: "きょうみ", meaning: "心を惹かれる関心" },
+  { word: "供述", reading: "きょうじゅつ", meaning: "事実を言い述べること" },
+  { word: "業務", reading: "ぎょうむ", meaning: "職業上の仕事" },
+  { word: "局長", reading: "きょくちょう", meaning: "局の責任者" },
+  { word: "局面", reading: "きょくめん", meaning: "物事の形勢・状況" },
+  { word: "極端", reading: "きょくたん", meaning: "極端で偏っていること" },
+  { word: "銀行", reading: "ぎんこう", meaning: "金銭の融通を行う金融機関" },
+  { word: "禁止", reading: "きんし", meaning: "やることを差し止めること" },
+  { word: "緊急", reading: "きんきゅう", meaning: "差し迫っていて急ぐこと" },
+  { word: "近所", reading: "きんじょ", meaning: "近くの場所・近隣" },
+  { word: "緊張", reading: "きんちょう", meaning: "心や体が引き締まること" },
+  { word: "偶然", reading: "ぐうぜん", meaning: "思いがけず起こること" },
+  { word: "具合", reading: "ぐあい", meaning: "ものの状態や体の調子" },
+  { word: "軍事", reading: "ぐんじ", meaning: "軍事に関する事柄" },
+  { word: "軍隊", reading: "ぐんたい", meaning: "国家の組織した武力組織" },
+  { word: "訓練", reading: "くんれん", meaning: "鍛えて能力を高めること" },
+  { word: "継続", reading: "けいぞく", meaning: "続けて行うこと" },
+  { word: "経営", reading: "けいえい", meaning: "事業を運営すること" },
+  { word: "計画", reading: "けいかく", meaning: "目的を達成するための予定" },
+  { word: "計算", reading: "けいさん", meaning: "数を計算して求めること" },
+  { word: "経済", reading: "けいざい", meaning: "生産・消費などの社会活動" },
+  { word: "警察", reading: "けいさつ", meaning: "治安を維持する機関" },
+  { word: "警告", reading: "けいこく", meaning: "注意を促し警戒させること" },
+  { word: "敬意", reading: "けいい", meaning: "相手を敬う気持ち" },
+  { word: "契約", reading: "けいやく", meaning: "法律上の取り決め" },
+  { word: "経験", reading: "けいけん", meaning: "実際に行い見聞きしたこと" },
+  { word: "傾向", reading: "けいこう", meaning: "物事の傾く方向・性質" },
+  { word: "形式", reading: "けいしき", meaning: "外見上の整った形" },
+  { word: "形成", reading: "けいせい", meaning: "形を作り上げること" },
+  { word: "景気", reading: "けいき", meaning: "経済活動の状態・活気" },
+  { word: "光景", reading: "こうけい", meaning: "目に映る景色・様子" },
+  { word: "刑事", reading: "けいじ", meaning: "刑事事件や事件の捜査官" },
+  { word: "芸術", reading: "げいじゅつ", meaning: "美を創造する表現活動" },
+  { word: "芸能", reading: "げいのう", meaning: "演劇や音楽などの技芸" },
+  { word: "欠陥", reading: "けっかん", meaning: "欠けて不足している部分" },
+  { word: "欠席", reading: "けっせき", meaning: "出席しないこと" },
+  { word: "決定", reading: "けってい", meaning: "方針や結論をしっかり決めること" },
+  { word: "決意", reading: "けつい", meaning: "心を固く決めること" },
+  { word: "決算", reading: "けっさん", meaning: "勘定を計算し締めること" },
+  { word: "結論", reading: "けつろん", meaning: "議論のまとめ・結果" },
+  { word: "結合", reading: "けつごう", meaning: "結びついて一つになること" },
+  { word: "限界", reading: "げんかい", meaning: "それ以上超えられない境" },
+  { word: "限定", reading: "げんてい", meaning: "範囲を限ること" },
+  { word: "幻想", reading: "げんそう", meaning: "現実から離れた思い描き" },
+  { word: "現実", reading: "げんじつ", meaning: "事実としての現在の状態" },
+  { word: "現代", reading: "げんだい", meaning: "今の時代" },
+  { word: "現場", reading: "げんば", meaning: "事件や作業の実際の場所" },
+  { word: "現象", reading: "げんしょう", meaning: "目に見える出来事" },
+  { word: "現状", reading: "げんじょう", meaning: "現在のそのままの状態" },
+  { word: "原始", reading: "げんし", meaning: "はじまり・最古の段階" },
+  { word: "原則", reading: "げんそく", meaning: "基本となる決まり" },
+  { word: "原因", reading: "げんいん", meaning: "事柄を引き起こした元" },
+  { word: "原料", reading: "げんりょう", meaning: "製品を作る元となる物" },
+  { word: "厳重", reading: "げんじゅう", meaning: "厳しく注意深く扱うこと" },
+  { word: "厳格", reading: "げんかく", meaning: "厳しく不正を許さない様" },
+  { word: "減少", reading: "げんしょう", meaning: "数量が減ること" },
+  { word: "言語", reading: "げんご", meaning: "意思疎通の言葉の体系" },
+  { word: "言論", reading: "げんろん", meaning: "言葉で考えを主張すること" },
+  { word: "検討", reading: "けんとう", meaning: "よく調べて考えること" },
+  { word: "検査", reading: "けんさ", meaning: "調べること" },
+  { word: "研究", reading: "けんきゅう", meaning: "詳しく調べて探求すること" },
+  { word: "建設", reading: "けんせつ", meaning: "建物や組織を作り立てること" },
+  { word: "建築", reading: "けんちく", meaning: "家などを建て築くこと" },
+  { word: "権利", reading: "けんり", meaning: "正当に行使できる資格" },
+  { word: "権力", reading: "けんりょく", meaning: "他を服従させる力" },
+  { word: "憲法", reading: "けんぽう", meaning: "国家の最高法規" },
+  { word: "健全", reading: "けんぜん", meaning: "身心や状態が良好なこと" },
+  { word: "謙虚", reading: "けんきょ", meaning: "控え目で威張らない様子" },
+  { word: "見解", reading: "けんかい", meaning: "物事に対する考え方" },
+  { word: "交通", reading: "こうつう", meaning: "人や乗り物の行き交い" },
+  { word: "交渉", reading: "こうしょう", meaning: "話し合いで取り決めること" },
+  { word: "交流", reading: "こうりゅう", meaning: "互いに交わり深めること" },
+  { word: "交代", reading: "こうたい", meaning: "順番に入れ替わること" },
+  { word: "交換", reading: "こうかん", meaning: "互いにやり取りすること" },
+  { word: "攻撃", reading: "こうげき", meaning: "攻めて打ち破ろうとすること" },
+  { word: "貢献", reading: "こうけん", meaning: "社会や人々に役立つこと" },
+  { word: "広告", reading: "こうこく", meaning: "広く知らせアピールすること" },
+  { word: "校長", reading: "こうちょう", meaning: "学校の責任者" },
+  { word: "公平", reading: "こうへい", meaning: "偏らず平等なこと" },
+  { word: "公園", reading: "こうえん", meaning: "人々が憩う公共の広場" },
+  { word: "公式", reading: "こうしき", meaning: "正式な形式・数式" },
+  { word: "公開", reading: "こうかい", meaning: "広く一般に見せること" },
+  { word: "公害", reading: "こうがい", meaning: "環境汚染による被害" },
+  { word: "構成", reading: "こうせい", meaning: "組み立てて構成すること" },
+  { word: "構造", reading: "こうぞう", meaning: "全体の仕組み・組み立て" },
+  { word: "高度", reading: "こうど", meaning: "高さ・高いレベル" },
+  { word: "高校", reading: "こうこう", meaning: "高等学校" },
+  { word: "高等", reading: "こうとう", meaning: "程度が高いこと" },
+  { word: "後悔", reading: "こうかい", meaning: "あとで残念に思い悔やむこと" },
+  { word: "候補", reading: "こうほ", meaning: "選ばれる対象となる者" },
+  { word: "光線", reading: "こうせん", meaning: "まっすぐに進む光のすじ" },
+  { word: "合理", reading: "ごうり", meaning: "道理や理屈に合っていること" },
+  { word: "合格", reading: "ごうかく", meaning: "基準を満たしてパスすること" },
+  { word: "合意", reading: "ごうい", meaning: "互いの意見が一致すること" },
+  { word: "合同", reading: "ごうどう", meaning: "力を合わせて一つにすること" },
+  { word: "克服", reading: "こくふく", meaning: "困難に打ち勝つこと" },
+  { word: "国民", reading: "こくみん", meaning: "国家を構成する人々" },
+  { word: "国家", reading: "こっか", meaning: "独立した政治的組織" },
+  { word: "国際", reading: "こくさい", meaning: "国家間の関係" },
+  { word: "国会", reading: "こっかい", meaning: "国の最高立法機関" },
+  { word: "国境", reading: "こっきょう", meaning: "国と国との境目" },
+  { word: "故障", reading: "こしょう", meaning: "機械などが壊れること" },
+  { word: "個人", reading: "こじん", meaning: "一人の人間・個々人" },
+  { word: "固定", reading: "こてい", meaning: "しっかり動かないよう止めること" },
+  { word: "固有", reading: "こゆう", meaning: "そのもの特有で持っていること" },
+  { word: "雇用", reading: "こよう", meaning: "給料を払って雇うこと" },
+  { word: "孤独", reading: "こどく", meaning: "ひとりぼっちで寂しいこと" },
+  { word: "孤立", reading: "こりつ", meaning: "仲間から離れて一つになること" },
+  { word: "混乱", reading: "こんらん", meaning: "乱れてとりとめがない状態" },
+  { word: "困難", reading: "こんなん", meaning: "難しく大変なこと" },
+  { word: "混雑", reading: "こんざつ", meaning: "混み合っていること" },
+  { word: "婚約", reading: "こんやく", meaning: "結婚の約束をすること" },
+  { word: "結婚", reading: "けっこん", meaning: "夫婦になること" },
+  { word: "根拠", reading: "こんきょ", meaning: "存在や主張の支え・理由" },
+  { word: "根本", reading: "こんぽん", meaning: "事物の成り立ちの基本" },
+  { word: "探検", reading: "たんけん", meaning: "未知の地域に踏み込んで調べること" },
+  { word: "旅行", reading: "りょこう", meaning: "住んでいる所を離れて他の土地へ行くこと" },
+  { word: "夢中", reading: "むちゅう", meaning: "物事に心をうばわれること" },
+  { word: "心配", reading: "しんぱい", meaning: "気がかりで心が落ち着かないこと" },
+  { word: "我慢", reading: "がまん", meaning: "つらさや欲求などを耐え忍ぶこと" },
+  { word: "栄養", reading: "えいよう", meaning: "体が成長や健康維持に必要な成分" },
+  { word: "喧嘩", reading: "けんか", meaning: "言い争ったり戦うこと" },
+  { word: "親子", reading: "おやこ", meaning: "親と子どもの間柄" },
+  { word: "応援", reading: "おうえん", meaning: "力を貸して手助けや声援を送ること" },
+  { word: "未来", reading: "みらい", meaning: "これからやって来る時間" },
+  { word: "過去", reading: "かこ", meaning: "過ぎ去った時間や出来事" },
+  { word: "現在", reading: "げんざい", meaning: "今この時間や現状" },
+  { word: "時間", reading: "じかん", meaning: "過去から未来へ流れる刻" },
+  { word: "準備", reading: "じゅんび", meaning: "物事を行う前に整えておくこと" },
+  { word: "自由", reading: "じゆう", meaning: "自分の思い通りに行動できること" },
+  { word: "平和", reading: "へいわ", meaning: "戦争や争いがなく穏やかなこと" },
+  { word: "努力", reading: "どりょく", meaning: "目標に向けて目的を果たそうと努めること" },
+  { word: "成功", reading: "せいこう", meaning: "目的を推し進めて達成すること" },
+  { word: "失敗", reading: "しっぱい", meaning: "やり損なうこと" },
+  { word: "希望", reading: "きぼう", meaning: "こうあってほしいと望むこと" },
+  { word: "挑戦", reading: "ちょうせん", meaning: "困難なことや新しいことに挑むこと" },
+  { word: "成長", reading: "せいちょう", meaning: "体や能力が大きく伸び育つこと" },
+  { word: "才能", reading: "さいのう", meaning: "物事を成し遂げる優れた能力" },
+  { word: "参加", reading: "さんか", meaning: "行事や集まりに加わること" },
+  { word: "裁判", reading: "さいばん", meaning: "法律に基づいて正誤や罪を裁くこと" },
+  { word: "散歩", reading: "さんぽ", meaning: "気晴らしにぶらぶら歩くこと" },
+  { word: "賛成", reading: "さんせい", meaning: "意見や提案に同意すること" },
+  { word: "祝福", reading: "しゅくふく", meaning: "幸運やめでたい出来事を祝うこと" },
+  { word: "幸福", reading: "こうふく", meaning: "心が満ち足りて幸せなこと" },
+  { word: "制度", reading: "せいど", meaning: "社会や組織の決まりや仕組み" },
+  { word: "整理", reading: "せいり", meaning: "乱れたものを整えて片付けること" },
+  { word: "責任", reading: "せきにん", meaning: "引き受けて果たすべき立場や義務" },
+  { word: "支援", reading: "しえん", meaning: "力を貸して手助けをすること" },
+  { word: "想像", reading: "そうぞう", meaning: "頭の中で思い描くこと" },
+  { word: "創造", reading: "そうぞう", meaning: "新しいものを初めて作り出すこと" },
+  { word: "相談", reading: "そうだん", meaning: "意見を求めたり話し合ったりすること" },
+  { word: "装置", reading: "そうち", meaning: "特定の目的のために取り付けた道具や機器" },
+  { word: "尊敬", reading: "そんけい", meaning: "人の人柄や行為を尊び重んじること" },
+  { word: "存在", reading: "そんざい", meaning: "実際にそこにあること・生きていること" },
+  { word: "知識", reading: "ちしき", meaning: "知っている内容や学習で得た情報" },
+  { word: "地球", reading: "ちきゅう", meaning: "私たちが住んでいる天体" },
+  { word: "地域", reading: "ちいき", meaning: "区切られた一定の土地や範囲" },
+  { word: "注目", reading: "ちゅうもく", meaning: "心を寄せてしっかり見ること" },
+  { word: "注文", reading: "ちゅうもん", meaning: "品物や仕事を頼むこと" },
+  { word: "朝食", reading: "ちょうしょく", meaning: "朝にとる食事" },
+  { word: "調査", reading: "ちょうさ", meaning: "事実や状態を詳しく調べること" },
+  { word: "調整", reading: "ちょうせい", meaning: "具合やバランスを整えること" },
+  { word: "頂上", reading: "ちょうじょう", meaning: "山などのいちばん高い所" },
+  { word: "通過", reading: "つうか", meaning: "途中で通り抜けること" },
+  { word: "通信", reading: "つうしん", meaning: "情報や便りをやり取りすること" },
+  { word: "通勤", reading: "つうきん", meaning: "職場の会社へ通うこと" },
+  { word: "提案", reading: "ていあん", meaning: "意見や案を出すこと" },
+  { word: "停止", reading: "ていし", meaning: "動いているものを止めること" },
+  { word: "抵抗", reading: "ていこう", meaning: "外部からの力にはじらい逆らうこと" },
+  { word: "提出", reading: "ていしゅつ", meaning: "書類や作品を差し出すこと" },
+  { word: "程度", reading: "ていど", meaning: "物事の高さや広がり・レベル" },
+  { word: "伝統", reading: "でんとう", meaning: "代々受け継がれてきた風習や技術" },
+  { word: "伝言", reading: "でんごん", meaning: "人に託して言葉を伝えること" },
+  { word: "電卓", reading: "でんたく", meaning: "計算を行う小さな電子機器" },
+  { word: "電車", reading: "でんしゃ", meaning: "電気の力で走る列車" },
+  { word: "到着", reading: "とうちゃく", meaning: "目的の場所にたどり着くこと" },
+  { word: "投票", reading: "とうひょう", meaning: "選挙などで票を投じること" },
+  { word: "討議", reading: "とうぎ", meaning: "意見を出し合って話し合うこと" },
+  { word: "信頼", reading: "しんらい", meaning: "相手を信じて頼りにすること" },
+  { word: "信用", reading: "しんよう", meaning: "これまでの実績から信じること" },
+  { word: "慎重", reading: "しんちょう", meaning: "軽はずみを避け注意深い様子" },
+  { word: "新鮮", reading: "しんせん", meaning: "魚や野菜が新しく活きが良いこと" },
+  { word: "進歩", reading: "しんぽ", meaning: "物事がより良い方向へ進むこと" },
+  { word: "相手", reading: "あいて", meaning: "ともに物事を行う対象の人" },
+  { word: "発見", reading: "はっけん", meaning: "まだ知られていないものを見つけること" },
+  { word: "発明", reading: "はつめい", meaning: "今までにない新しい物を作り出すこと" },
+  { word: "発展", reading: "はってん", meaning: "物事の勢いが広がり伸びること" },
+  { word: "発表", reading: "はっぴょう", meaning: "大勢の前で公に知らせること" },
+  { word: "発行", reading: "はっこう", meaning: "書籍や紙幣などを世に出すこと" },
+  { word: "発車", reading: "はっしゃ", meaning: "電車やバスなどが動き出すこと" },
+  { word: "判断", reading: "はんだん", meaning: "物事の真偽や優劣を決定すること" },
+  { word: "反対", reading: "はんたい", meaning: "意見や提案に承知しないこと" },
+  { word: "比較", reading: "ひかく", meaning: "二つ以上のものをくらべること" },
+  { word: "批判", reading: "ひはん", meaning: "判定して評価や欠点を指摘すること" },
+  { word: "非常", reading: "ひじょう", meaning: "普通とは異なり緊急であること" },
+  { word: "評価", reading: "ひょうか", meaning: "価値や値段を見定めること" },
+  { word: "評判", reading: "ひょうばん", meaning: "世間の人々からの評価や噂" },
+  { word: "表面", reading: "ひょうめん", meaning: "物事の外側の面" },
+  { word: "表現", reading: "ひょうげん", meaning: "思いや感情を言葉や形で表すこと" },
+  { word: "表示", reading: "ひょうじ", meaning: "表に示してはっきり見せること" },
+  { word: "表情", reading: "ひょうじょう", meaning: "顔つきに現れる気持ちの状態" },
+  { word: "平等", reading: "びょうどう", meaning: "差別なく偏りがないこと" },
+  { word: "普及", reading: "ふきゅう", meaning: "広く行き渡り親しまれること" },
+  { word: "複雑", reading: "ふくざつ", meaning: "事情や仕組みが込み入っていること" },
+  { word: "復活", reading: "ふっかつ", meaning: "一度衰えたものがよみがえること" },
+  { word: "復習", reading: "ふくしゅう", meaning: "習ったことをおさらいすること" },
+  { word: "目的", reading: "もくてき", meaning: "目指している事柄やあて" },
+  { word: "目標", reading: "もくひょう", meaning: "目指す具体的な当てや標識" },
+  { word: "容易", reading: "ようい", meaning: "たやすく簡単にできる様子" },
+  { word: "要求", reading: "ようきゅう", meaning: "強く求めること" },
+  { word: "要素", reading: "ようそ", meaning: "物事を成り立たせる基本的な成分" },
+  { word: "予防", reading: "よぼう", meaning: "悪い事態が起こらないよう防ぐこと" },
+  { word: "予約", reading: "よやく", meaning: "前もって取り決めておくこと" },
+  { word: "理想", reading: "りそう", meaning: "考え得る最も望ましい姿" },
+  { word: "理解", reading: "りかい", meaning: "物事の意味や理由を飲み込むこと" },
+  { word: "流行", reading: "りゅうこう", meaning: "世間に広くもてはやされ広まること" },
+  { word: "連絡", reading: "れんらく", meaning: "情報や意思を伝え合うこと" },
+  { word: "練習", reading: "れんしゅう", meaning: "上達のために繰り返し行うこと" },
+  { word: "連続", reading: "れんぞく", meaning: "途切れずに続いて起こること" },
+  { word: "勇気", reading: "ゆうき", meaning: "恐れずに立ち向かう強い心" },
+  { word: "勝利", reading: "しょうり", meaning: "戦いや試合で勝ちを得ること" },
+  { word: "敗北", reading: "はいぼく", meaning: "戦いに負けて敗れること" },
+  { word: "誠実", reading: "せいじつ", meaning: "真面目で偽りがない様子" },
+  { word: "純粋", reading: "じゅんすい", meaning: "混ざり気がなく清らかな心" },
+  { word: "情熱", reading: "じょうねつ", meaning: "熱く激しい気持ちや感情" },
+  { word: "礼儀", reading: "れいぎ", meaning: "社会生活の正しい作法" }
+];
+
+const IDIOM_MULTICHAR_DATABASE = [
+  { word: "不公平", reading: "ふこうへい", meaning: "平等でなく偏りがあること" },
+  { word: "刻一刻", reading: "こくいっこく", meaning: "時間が少しずつ経過していく様子" },
+  { word: "消費者", reading: "しょうひしゃ", meaning: "製品やサービスを購入して使う人" },
+  { word: "生産者", reading: "せいさんしゃ", meaning: "物や製品を作り出す人" },
+  { word: "低気圧", reading: "ていきあつ", meaning: "周囲より気圧が低い空気の渦" },
+  { word: "自尊心", reading: "じそんしん", meaning: "自分の人格や誇りを大切にする気持ち" },
+  { word: "不可解", reading: "ふかかい", meaning: "筋道が通らず理解できない様子" },
+  { word: "無邪気", reading: "むじゃき", meaning: "素直で悪気がなくかわいらしいこと" },
+  { word: "合理的", reading: "ごうりてき", meaning: "無駄がなく筋道にかなっている様子" },
+  { word: "不可欠", reading: "ふかけつ", meaning: "欠かすことができない重要なこと" },
+  { word: "有権者", reading: "ゆうけんしゃ", meaning: "投票する権利を持っている人" },
+  { word: "不動産", reading: "ふどうさん", meaning: "土地や建物などの動かせない財産" },
+  { word: "暴風雨", reading: "ぼうふうう", meaning: "激しい風を伴って降る大雨" },
+  { word: "喜怒哀楽", reading: "きどあいらく", meaning: "喜び・怒り・悲しみ・楽しみの感情" },
+  { word: "一石二鳥", reading: "いっせきにちょう", meaning: "一つの行動で二つの利益を得ること" },
+  { word: "温故知新", reading: "おんこちしん", meaning: "昔の事を学び新しい知識を得ること" },
+  { word: "試行錯誤", reading: "しこうさくご", meaning: "失敗を重ねながら良い方法を探すこと" },
+  { word: "一生懸命", reading: "いっしょうけんめい", meaning: "命がけで真面目に取り組み努力すること" },
+  { word: "自業自得", reading: "じごうじとく", meaning: "自分の行いの報いを自身が受けること" },
+  { word: "十人十色", reading: "じゅうにんといろ", meaning: "考えや好みが人それぞれ異なること" },
+  { word: "以心伝心", reading: "いしんでんしん", meaning: "言葉に出さなくても気持ちが通じ合うこと" },
+  { word: "四苦八苦", reading: "しくはっく", meaning: "大変な苦労や悩みをすること" },
+  { word: "千載一遇", reading: "せんざいいちぐう", meaning: "めったにない絶好の機会" },
+  { word: "一朝一夕", reading: "いっちょういっせき", meaning: "わずかごく短い時間のこと" },
+  { word: "起死回生", reading: "きしかいせい", meaning: "絶望的な状態から立ち直らせること" },
+  { word: "日常茶飯", reading: "にちじょうさはん", meaning: "当たり前の毎日の出来事" },
+  { word: "五分五分", reading: "ごぶごぶ", meaning: "両者の勢力や勝敗が等しいこと" },
+  { word: "百発百中", reading: "ひゃっぱつひゃくちゅう", meaning: "計画や予想がすべて当たること" },
+  { word: "前代未聞", reading: "ぜんだいみもん", meaning: "これまでに聞いたこともない珍しいこと" },
+  { word: "正真正銘", reading: "しょうしんしょうめい", meaning: "嘘偽りがなく本物であること" },
+  { word: "支離滅裂", reading: "しりめつれつ", meaning: "筋道が立ちゆかずバラバラなこと" },
+  { word: "危機一髪", reading: "ききいっぱつ", meaning: "きわめて危険で切迫した状態" },
+  { word: "無我夢中", reading: "むがむちゅう", meaning: "心を奪われ我を忘れて熱中すること" },
+  { word: "悪戦苦闘", reading: "あくせんくとう", meaning: "困難な状況で死力を尽くして戦うこと" },
+  { word: "電光石火", reading: "でんこうせっか", meaning: "動作や動きがきわめて素早い様子" },
+  { word: "自画自賛", reading: "じがじさん", meaning: "自分のしたことを自分でほめること" },
+  { word: "適材適所", reading: "てきざいてきしょ", meaning: "能力に適した職務につけること" },
+  { word: "有名無実", reading: "ゆうめいむじつ", meaning: "名ばかりで実質が伴わないこと" },
+  { word: "大同小異", reading: "だいどうしょうい", meaning: "細かい違いはあってもほぼ同じなこと" },
+  { word: "臨機応変", reading: "りんきおうへん", meaning: "状況の変化に応じて適切に対処すること" },
+  { word: "七転八起", reading: "ななころびやおき", meaning: "何度失敗しても諦めずに立ち上がること" },
+  { word: "切磋琢磨", reading: "せっさたくま", meaning: "互いに磨き合って向上すること" },
+  { word: "一期一会", reading: "いちごいちえ", meaning: "生涯に一度限りの貴重な出会い" },
+  { word: "猪突猛進", reading: "ちょとつもうしん", meaning: "目標に向かってまっすぐ突き進むこと" }
+];
+
+const SPECIAL_STAGE_THEMES = [
+  {
+    name: "動物",
+    targets: ["猫", "犬", "虎", "熊", "鹿", "狐", "狼", "象", "猿", "馬", "牛", "豚", "羊", "鳥", "鶴", "豹", "獅", "鷲", "鷹", "兎"]
+  },
+  {
+    name: "魚・海の生き物",
+    targets: ["鮭", "鮪", "鯖", "鯛", "鮎", "鰹", "鯉", "鮫", "鰻", "鰺", "鰯", "鰈", "鱈", "鯨", "鰆", "蛸", "烏", "蟹", "蝦", "鮑"]
+  },
+  {
+    name: "植物・木・花",
+    targets: ["桜", "松", "竹", "梅", "杉", "菊", "藤", "柳", "楓", "柿", "桃", "栗", "桐", "葵", "椿", "蘭", "百", "草", "葉", "芽"]
+  },
+  {
+    name: "色",
+    targets: ["赤", "青", "黄", "緑", "白", "黒", "紫", "桃", "橙", "紺", "茶", "銀", "金", "灰", "朱", "紅", "碧", "翠", "墨", "茜"]
+  },
+  {
+    name: "身体・人体",
+    targets: ["手", "足", "目", "耳", "口", "頭", "心", "骨", "血", "首", "指", "胸", "腹", "背", "歯", "肩", "腕", "顔", "脳", "肌"]
+  },
+  {
+    name: "自然・天気",
+    targets: ["雨", "雪", "風", "雲", "雷", "海", "山", "川", "空", "星", "月", "日", "谷", "陸", "波", "虹", "霧", "霜", "嵐", "潮"]
+  }
+];
+
+const DUMMY_KANJI_POOL = [
+  "語", "数", "代", "利", "車", "本", "学", "話", "時", "生", "食", "力", "立", "走", "高", "大", "小", "新", "古", "名",
+  "間", "国", "社", "校", "門", "天", "地", "方", "道", "線", "点", "面", "体", "文", "字", "音", "画", "野", "原", "市",
+  "町", "村", "家", "室", "店", "場", "工", "業", "政", "法", "理", "科", "算", "図", "画", "歌", "踊", "走", "跳", "投"
+];
+
+let currentPosition = 0; // 0 〜 50
+let currentStage = 1;
+let totalPoints = 0;
+let nextSpecialStageMilestone = 500;
+let timer = 120;
+let timerInterval = null;
+let soundEnabled = true;
+
+let deck2Char = [];
+let deckMultiChar = [];
+
+let currentIdioms = [];
+let usedHintsInStage = [false, false, false, false, false];
+let selectedCard = null;
+let audioCtx = null;
+let trackCoords = [];
+
+let draggedCard = null;
+let touchClone = null;
+let touchStartX = 0;
+let touchStartY = 0;
+
+function initTrack() {
+  const container = document.getElementById('game-container');
+  const trackContainer = document.getElementById('track-container');
+  trackContainer.innerHTML = '';
+  trackCoords = [];
+
+  const rect = container.getBoundingClientRect();
+  const containerW = rect.width || 1200;
+  const containerH = rect.height || 675;
+
+  const marginX = 26;
+  const marginY = 26;
+
+  const trackW = containerW - marginX * 2;
+  const trackH = containerH - marginY * 2;
+
+  const totalPerimeter = 2 * (trackW + trackH);
+  const totalTiles = 51;
+  const step = totalPerimeter / totalTiles;
+
+  const xStart = trackW * 0.52;
+
+  for (let i = 0; i < totalTiles; i++) {
+    const dist = i * step;
+    let x, y;
+
+    if (dist <= trackW - xStart) {
+      x = xStart + dist;
+      y = trackH;
+    } else if (dist <= (trackW - xStart) + trackH) {
+      const d = dist - (trackW - xStart);
+      x = trackW;
+      y = trackH - d;
+    } else if (dist <= (trackW - xStart) + trackH + trackW) {
+      const d = dist - ((trackW - xStart) + trackH);
+      x = trackW - d;
+      y = 0;
+    } else if (dist <= (trackW - xStart) + 2 * trackH + trackW) {
+      const d = dist - ((trackW - xStart) + trackH + trackW);
+      x = 0;
+      y = d;
+    } else {
+      const d = dist - ((trackW - xStart) + 2 * trackH + trackW);
+      x = d;
+      y = trackH;
+    }
+
+    const pctX = ((x + marginX) / containerW) * 100;
+    const pctY = ((y + marginY) / containerH) * 100;
+
+    trackCoords.push({ x: pctX, y: pctY });
+
+    const tile = document.createElement('div');
+    tile.className = 'track-tile';
+    tile.id = `tile-${i}`;
+    tile.style.left = `${pctX}%`;
+    tile.style.top = `${pctY}%`;
+
+    if (i === 0) {
+      tile.classList.add('start-tile');
+      tile.innerText = 'START';
+    } else if (i === 50) {
+      tile.classList.add('goal-tile');
+      tile.innerText = 'GOAL';
+    } else {
+      tile.innerText = i;
+    }
+    trackContainer.appendChild(tile);
+  }
+
+  updateTrackUI();
+}
+
+function updateTrackUI() {
+  for (let i = 0; i < 51; i++) {
+    const tile = document.getElementById(`tile-${i}`);
+    if (!tile) continue;
+
+    tile.classList.remove('active-green', 'active-yellow');
+
+    let isGreen = i < currentPosition;
+    let isYellow = (i === currentPosition && i > 0 && i < 50);
+
+    if (isGreen) {
+      tile.classList.add('active-green');
+    } else if (isYellow) {
+      tile.classList.add('active-yellow');
+    }
+  }
+}
+
+function resetDeck2Char() {
+  deck2Char = [...IDIOM_2CHAR_DATABASE].sort(() => Math.random() - 0.5);
+}
+
+function resetDeckMultiChar() {
+  deckMultiChar = [...IDIOM_MULTICHAR_DATABASE].sort(() => Math.random() - 0.5);
+}
+
+function resetDeck() {
+  resetDeck2Char();
+  resetDeckMultiChar();
+}
+
+function getNext5Idioms() {
+  let selected = [];
+  let usedKanji = new Set();
+
+  let includeMulti = Math.random() < 0.35;
+  let multiItem = null;
+
+  if (includeMulti) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (deckMultiChar.length === 0) resetDeckMultiChar();
+      for (let i = 0; i < deckMultiChar.length; i++) {
+        let item = deckMultiChar[i];
+        let kanjiList = item.word.split('');
+        if (!kanjiList.some(k => usedKanji.has(k))) {
+          multiItem = item;
+          kanjiList.forEach(k => usedKanji.add(k));
+          deckMultiChar.splice(i, 1);
+          break;
+        }
+      }
+      if (multiItem) break;
+    }
+  }
+
+  const countNeeded = multiItem ? 4 : 5;
+
+  for (let count = 0; count < countNeeded; count++) {
+    let item2 = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (deck2Char.length === 0) resetDeck2Char();
+      for (let i = 0; i < deck2Char.length; i++) {
+        let item = deck2Char[i];
+        let kanjiList = item.word.split('');
+        if (!kanjiList.some(k => usedKanji.has(k))) {
+          item2 = item;
+          kanjiList.forEach(k => usedKanji.add(k));
+          deck2Char.splice(i, 1);
+          break;
+        }
+      }
+      if (item2) break;
+    }
+    if (!item2 && deck2Char.length > 0) {
+      item2 = deck2Char.shift();
+      item2.word.split('').forEach(k => usedKanji.add(k));
+    }
+    if (item2) selected.push(item2);
+  }
+
+  if (multiItem) selected.push(multiItem);
+
+  return selected.sort(() => Math.random() - 0.5);
+}
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function cleanupTouchState() {
+  if (touchClone) {
+    touchClone.remove();
+    touchClone = null;
+  }
+  if (draggedCard) {
+    draggedCard.style.opacity = '1';
+    draggedCard = null;
+  }
+  document.querySelectorAll('.touch-drag-clone').forEach(el => el.remove());
+}
+
+function startStage() {
+  cleanupTouchState();
+  clearInterval(timerInterval);
+  timer = 120;
+  selectedCard = null;
+  usedHintsInStage = [false, false, false, false, false];
+  
+  document.getElementById('timer-display').innerText = `⏱ ${formatTime(timer)}`;
+  document.getElementById('stage-display').innerText = `🚩 STAGE ${currentStage}`;
+
+  currentIdioms = getNext5Idioms();
+  renderProblemRows();
+  renderCards();
+
+  triggerStageZoomIn(`STAGE ${currentStage}`, () => {
+    timerInterval = setInterval(() => {
+      timer--;
+      document.getElementById('timer-display').innerText = `⏱ ${formatTime(timer)}`;
+      if (timer <= 0) {
+        clearInterval(timerInterval);
+        handleTimeUp();
+      }
+    }, 1000);
+  });
+}
+
+function triggerStageZoomIn(text, onComplete) {
+  const overlay = document.getElementById('stage-zoom-overlay');
+  const zoomText = document.getElementById('stage-zoom-text');
+
+  zoomText.innerText = text;
+  zoomText.classList.remove('animate');
+  overlay.classList.add('show');
+
+  playSE('zoomIn');
+
+  setTimeout(() => {
+    zoomText.classList.add('animate');
+  }, 20);
+
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    zoomText.classList.remove('animate');
+    if (onComplete) onComplete();
+  }, 1100);
+}
+
+function rollUpPoints(targetPoints, onComplete) {
+  const display = document.getElementById('points-display');
+  display.classList.add('rolling');
+
+  let currentVal = totalPoints;
+  const diff = targetPoints - totalPoints;
+  
+  if (diff <= 0) {
+    display.innerText = `⭐ ${targetPoints} pt`;
+    display.classList.remove('rolling');
+    totalPoints = targetPoints;
+    if (onComplete) onComplete();
+    return;
+  }
+
+  const steps = Math.min(30, diff);
+  const increment = diff / steps;
+  let stepCount = 0;
+
+  const interval = setInterval(() => {
+    stepCount++;
+    currentVal += increment;
+    const roundVal = Math.round(currentVal);
+    display.innerText = `⭐ ${roundVal} pt`;
+    playSE('rollup');
+
+    if (stepCount >= steps) {
+      clearInterval(interval);
+      totalPoints = targetPoints;
+      display.innerText = `⭐ ${totalPoints} pt`;
+      display.classList.remove('rolling');
+      if (onComplete) onComplete();
+    }
+  }, 35);
+}
+
+function renderProblemRows() {
+  const list = document.getElementById('idiom-list');
+  list.innerHTML = '';
+
+  currentIdioms.forEach((item, rowIndex) => {
+    const row = document.createElement('div');
+    row.className = 'idiom-row';
+
+    const meaning = document.createElement('div');
+    meaning.className = 'meaning-text';
+    meaning.innerText = item.meaning;
+
+    const slotsContainer = document.createElement('div');
+    slotsContainer.className = 'slots-container';
+
+    const reading = document.createElement('div');
+    reading.className = 'reading-display';
+    reading.id = `reading-${rowIndex}`;
+    reading.innerText = item.reading;
+    slotsContainer.appendChild(reading);
+
+    for (let c = 0; c < item.word.length; c++) {
+      const slot = document.createElement('div');
+      slot.className = 'drop-slot';
+      slot.dataset.rowIndex = rowIndex;
+      slot.dataset.slotIndex = c;
+      slot.ondragover = allowDrop;
+      slot.ondrop = dropToSlot;
+      slot.onclick = () => handleSlotClick(slot);
+      slotsContainer.appendChild(slot);
+    }
+
+    const hintBtn = document.createElement('button');
+    hintBtn.className = 'hint-btn';
+    hintBtn.innerText = 'ヒント';
+    hintBtn.onclick = (e) => {
+      e.stopPropagation();
+      showRowHint(rowIndex, hintBtn);
+    };
+
+    row.appendChild(meaning);
+    row.appendChild(slotsContainer);
+    row.appendChild(hintBtn);
+    list.appendChild(row);
+  });
+}
+
+function showRowHint(rowIndex, btn) {
+  if (usedHintsInStage[rowIndex]) return;
+  usedHintsInStage[rowIndex] = true;
+  btn.classList.add('used');
+  btn.innerText = 'ヒント済';
+  btn.disabled = true;
+
+  const targetIdiom = currentIdioms[rowIndex];
+  const firstSlot = document.querySelector(`.drop-slot[data-row-index="${rowIndex}"][data-slot-index="0"]`);
+  
+  if (firstSlot && !firstSlot.querySelector('.hint-text')) {
+    const hintSpan = document.createElement('span');
+    hintSpan.className = 'hint-text';
+    hintSpan.innerText = targetIdiom.word[0];
+    firstSlot.appendChild(hintSpan);
+  }
+
+  playSE('click');
+}
+
+function returnCardToPool(card) {
+  if (!card) return;
+  const originalSlot = document.getElementById(card.dataset.poolSlotId);
+  if (originalSlot) {
+    originalSlot.appendChild(card);
+  } else {
+    document.getElementById('card-pool').appendChild(card);
+  }
+}
+
+function renderCards() {
+  cleanupTouchState();
+  const pool = document.getElementById('card-pool');
+  pool.innerHTML = '';
+
+  let allChars = [];
+  currentIdioms.forEach(item => {
+    item.word.split('').forEach(char => allChars.push(char));
+  });
+  allChars.sort(() => Math.random() - 0.5);
+
+  allChars.forEach((char, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'pool-slot';
+    slot.id = `pool-slot-${i}`;
+
+    const card = document.createElement('div');
+    card.className = 'kanji-card';
+    card.innerText = char;
+    card.id = `card-${i}`;
+    card.dataset.poolSlotId = `pool-slot-${i}`;
+    card.draggable = true;
+
+    card.ondragstart = (e) => {
+      e.dataTransfer.setData('text', e.target.id);
+      selectCard(card);
+      playSE('click');
+    };
+
+    card.onclick = (e) => {
+      e.stopPropagation();
+      if (card.classList.contains('correct')) return;
+      selectCard(card);
+      playSE('click');
+    };
+
+    addTouchEvents(card);
+
+    slot.appendChild(card);
+    pool.appendChild(slot);
+  });
+}
+
+function addTouchEvents(card) {
+  const onTouchStart = (e) => {
+    if (card.classList.contains('correct')) return;
+    if (e.touches.length > 1) {
+      e.preventDefault();
+      cleanupTouchState();
+      return;
+    }
+    e.preventDefault();
+
+    cleanupTouchState();
+
+    const touch = e.touches[0];
+    draggedCard = card;
+    selectCard(card);
+    playSE('click');
+
+    const rect = card.getBoundingClientRect();
+    touchClone = card.cloneNode(true);
+    touchClone.classList.add('touch-drag-clone');
+    touchClone.style.position = 'fixed';
+    touchClone.style.left = `${rect.left}px`;
+    touchClone.style.top = `${rect.top}px`;
+    touchClone.style.width = `${rect.width}px`;
+    touchClone.style.height = `${rect.height}px`;
+    touchClone.style.zIndex = '1000';
+    touchClone.style.pointerEvents = 'none';
+    touchClone.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
+    touchClone.style.transform = 'scale(1.1)';
+    document.body.appendChild(touchClone);
+
+    touchStartX = touch.clientX - rect.left;
+    touchStartY = touch.clientY - rect.top;
+    card.style.opacity = '0.3';
+  };
+
+  const onTouchMove = (e) => {
+    if (!draggedCard || !touchClone) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    touchClone.style.left = `${touch.clientX - touchStartX}px`;
+    touchClone.style.top = `${touch.clientY - touchStartY}px`;
+  };
+
+  const onTouchEnd = (e) => {
+    if (!draggedCard) return;
+    const touch = e.changedTouches[0];
+    const currentCard = draggedCard;
+
+    cleanupTouchState();
+
+    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (dropTarget) {
+      const slot = dropTarget.closest('.drop-slot');
+      const pool = dropTarget.closest('#card-pool-container, #card-pool');
+
+      if (slot) {
+        handleSlotDrop(currentCard, slot);
+      } else if (pool) {
+        returnCardToPool(currentCard);
+        document.querySelectorAll('.drop-slot').forEach(s => {
+          if (!s.querySelector('.kanji-card')) s.classList.remove('filled');
+        });
+        selectCard(null);
+      }
+    }
+  };
+
+  const onTouchCancel = () => {
+    cleanupTouchState();
+  };
+
+  card.addEventListener('touchstart', onTouchStart, { passive: false });
+  card.addEventListener('touchmove', onTouchMove, { passive: false });
+  card.addEventListener('touchend', onTouchEnd);
+  card.addEventListener('touchcancel', onTouchCancel);
+}
+
+function handleSlotDrop(card, slot) {
+  const existingCard = slot.querySelector('.kanji-card');
+  if (existingCard && existingCard !== card) {
+    if (!existingCard.classList.contains('correct')) {
+      returnCardToPool(existingCard);
+    } else {
+      return;
+    }
+  }
+  slot.appendChild(card);
+  slot.classList.add('filled');
+  selectCard(null);
+  playSE('click');
+  checkRowCompletion(slot.dataset.rowIndex);
+}
+
+function selectCard(card) {
+  if (selectedCard) {
+    selectedCard.classList.remove('selected');
+  }
+  if (selectedCard === card) {
+    selectedCard = null;
+    return;
+  }
+  selectedCard = card;
+  if (card) {
+    card.classList.add('selected');
+  }
+}
+
+function handleSlotClick(slot) {
+  const existingCard = slot.querySelector('.kanji-card');
+  if (existingCard) {
+    if (!existingCard.classList.contains('correct')) {
+      returnCardToPool(existingCard);
+      slot.classList.remove('filled');
+      playSE('click');
+      if (selectedCard === existingCard) selectCard(null);
+    }
+  } else if (selectedCard) {
+    handleSlotDrop(selectedCard, slot);
+  }
+}
+
+function allowDrop(e) { e.preventDefault(); }
+
+function dropToSlot(e) {
+  e.preventDefault();
+  const cardId = e.dataTransfer.getData('text');
+  const card = document.getElementById(cardId);
+  const targetSlot = e.currentTarget;
+
+  if (!card) return;
+  handleSlotDrop(card, targetSlot);
+}
+
+function dropToPool(e) {
+  e.preventDefault();
+  const cardId = e.dataTransfer.getData('text');
+  const card = document.getElementById(cardId);
+  if (card) {
+    returnCardToPool(card);
+    document.querySelectorAll('.drop-slot').forEach(slot => {
+      if (!slot.querySelector('.kanji-card')) slot.classList.remove('filled');
+    });
+    selectCard(null);
+  }
+}
+
+function checkRowCompletion(rowIndex) {
+  const targetIdiom = currentIdioms[rowIndex];
+  const slots = document.querySelectorAll(`.drop-slot[data-row-index="${rowIndex}"]`);
+  let placedChars = '';
+
+  slots.forEach(slot => {
+    const card = slot.querySelector('.kanji-card');
+    if (card) {
+      placedChars += card.innerText;
+    }
+  });
+
+  if (placedChars.length === targetIdiom.word.length) {
+    if (placedChars === targetIdiom.word) {
+      playSE('correct');
+      document.getElementById(`reading-${rowIndex}`).classList.add('show');
+      slots.forEach(slot => {
+        const card = slot.querySelector('.kanji-card');
+        if (card) {
+          card.ondragstart = null;
+          card.onclick = null;
+          card.classList.remove('selected');
+          card.classList.add('correct');
+        }
+      });
+
+      const tilesToAdvance = usedHintsInStage[rowIndex] ? 1 : 2;
+      advancePosition(tilesToAdvance);
+      checkAllCompleted();
+    } else {
+      playSE('wrong');
+      setTimeout(() => {
+        slots.forEach(slot => {
+          const card = slot.querySelector('.kanji-card');
+          if (card && !card.classList.contains('correct')) {
+            returnCardToPool(card);
+            slot.classList.remove('filled');
+          }
+        });
+        penalizePosition(2);
+      }, 350);
+    }
+  }
+}
+
+function checkAllCompleted() {
+  const allRows = document.querySelectorAll('.idiom-row');
+  let completedCount = 0;
+  allRows.forEach(row => {
+    const slots = row.querySelectorAll('.drop-slot');
+    const isCorrect = Array.from(slots).every(s => {
+      const card = s.querySelector('.kanji-card');
+      return card && card.classList.contains('correct');
+    });
+    if (isCorrect) completedCount++;
+  });
+
+  if (completedCount === 5) {
+    playSE('milestone');
+    triggerConfetti();
+    
+    const remainingSec = Math.max(0, timer);
+    const stageGainedPoints = 50 + remainingSec;
+    const targetPoints = totalPoints + stageGainedPoints;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="stage-clear-banner">
+        <h2>🎉 5問全問クリア！</h2>
+        <p style="margin-bottom: 4px;">⭐ クリア 50pt ＋ 残り${remainingSec}秒 (${remainingSec}pt) ＝ <strong>＋${stageGainedPoints}pt</strong> 獲得！</p>
+      </div>
+    `;
+    document.getElementById('game-container').appendChild(modal);
+
+    setTimeout(() => {
+      modal.remove();
+      currentStage++;
+      
+      rollUpPoints(targetPoints, () => {
+        checkSpecialStageOrNext();
+      });
+    }, 1800);
+  }
+}
+
+function checkSpecialStageOrNext() {
+  if (totalPoints >= nextSpecialStageMilestone) {
+    nextSpecialStageMilestone += 500;
+    startSpecialStage();
+  } else {
+    startStage();
+  }
+}
+
+async function advancePosition(count) {
+  for (let step = 0; step < count; step++) {
+    if (currentPosition >= 50) break;
+
+    const prevTile = document.getElementById(`tile-${currentPosition}`);
+    if (prevTile && currentPosition > 0) {
+      prevTile.classList.remove('active-yellow');
+      prevTile.classList.add('active-green');
+    }
+
+    currentPosition++;
+
+    const currTile = document.getElementById(`tile-${currentPosition}`);
+    if (currTile) {
+      if (currentPosition < 50) {
+        currTile.classList.add('active-yellow');
+      } else {
+        currTile.classList.add('active-green');
+      }
+      currTile.classList.remove('tile-pop');
+      void currTile.offsetWidth;
+      currTile.classList.add('tile-pop');
+    }
+
+    playSE('click');
+    await new Promise(resolve => setTimeout(resolve, 380));
+  }
+
+  updateTrackUI();
+
+  if (currentPosition >= 50) {
+    currentPosition = 50;
+    clearInterval(timerInterval);
+    
+    triggerGoalOrbitAnimation(() => {
+      showGoalBonusBanner(() => {
+        showGoalModal();
+      });
+    });
+  }
+}
+
+async function penalizePosition(count) {
+  for (let step = 0; step < count; step++) {
+    if (currentPosition <= 0) break;
+
+    const currTile = document.getElementById(`tile-${currentPosition}`);
+    if (currTile) {
+      currTile.classList.remove('active-yellow', 'active-green', 'tile-pop');
+    }
+
+    currentPosition--;
+
+    const prevTile = document.getElementById(`tile-${currentPosition}`);
+    if (prevTile && currentPosition > 0) {
+      prevTile.classList.remove('active-green');
+      prevTile.classList.add('active-yellow');
+      prevTile.classList.remove('tile-pop');
+      void prevTile.offsetWidth;
+      prevTile.classList.add('tile-pop');
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+
+  updateTrackUI();
+}
+
+function showGoalBonusBanner(onComplete) {
+  playSE('fanfare');
+  triggerConfetti();
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="bonus-banner">
+      <h2>🎁 完走ボーナス！</h2>
+      <p style="font-size: 16px; color: #fef3c7;">外周50マス1周達成報酬！</p>
+      <div class="bonus-amount">+100 BONUS PT</div>
+    </div>
+  `;
+  document.getElementById('game-container').appendChild(modal);
+
+  const targetPoints = totalPoints + 100;
+
+  setTimeout(() => {
+    rollUpPoints(targetPoints, () => {
+      setTimeout(() => {
+        modal.remove();
+        if (onComplete) onComplete();
+      }, 500);
+    });
+  }, 1000);
+}
+
+function triggerGoalOrbitAnimation(onComplete) {
+  playSE('goal');
+  triggerConfetti();
+
+  let lapCount = 0;
+  let currentIndex = 0;
+  const totalTiles = 51;
+
+  const orbitInterval = setInterval(() => {
+    document.querySelectorAll('.track-tile').forEach(t => t.classList.remove('active-orbit'));
+
+    const tile = document.getElementById(`tile-${currentIndex}`);
+    if (tile) {
+      tile.classList.add('active-orbit');
+      playSE('orbit');
+    }
+
+    currentIndex++;
+    if (currentIndex >= totalTiles) {
+      currentIndex = 0;
+      lapCount++;
+    }
+
+    if (lapCount >= 2) {
+      clearInterval(orbitInterval);
+      document.querySelectorAll('.track-tile').forEach(t => t.classList.remove('active-orbit'));
+      if (onComplete) onComplete();
+    }
+  }, 30);
+}
+
+function showGoalModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-card">
+      <h2 class="win">🏆 GOAL! 1周クリア！</h2>
+      <p>おめでとうございます！<br>すべてのマスコースを完走しました！<br><br>最終スコア: <strong>${totalPoints} pt</strong></p>
+      <div class="modal-btns">
+        <button class="btn btn-next" onclick="restartGame()">もう一度遊ぶ</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('game-container').appendChild(modal);
+}
+
+function restartGame() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+  currentPosition = 0;
+  currentStage = 1;
+  totalPoints = 0;
+  nextSpecialStageMilestone = 500;
+  document.getElementById('points-display').innerText = `⭐ 0 pt`;
+  updateTrackUI();
+  resetDeck();
+  startStage();
+}
+
+function handleTimeUp() {
+  playSE('timeup');
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-card">
+      <h2>⏰ タイムアップ！</h2>
+      <p>制限時間が終了しました。<br>現在のスコア: <strong>${totalPoints} pt</strong></p>
+      <div class="modal-btns">
+        <button class="btn btn-retry" onclick="retryStage()">やり直す</button>
+        <button class="btn btn-quit" onclick="restartGame()">最初から</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('game-container').appendChild(modal);
+}
+
+function retryStage() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+  startStage();
+}
+
+function startSpecialStage() {
+  clearInterval(timerInterval);
+  playSE('milestone');
+  
+  const theme = SPECIAL_STAGE_THEMES[Math.floor(Math.random() * SPECIAL_STAGE_THEMES.length)];
+  let specialTimer = 15;
+  let specialScore = 0;
+  let remainingTargets = theme.targets.length;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  
+  let panels = [];
+  theme.targets.forEach(kanji => panels.push({ kanji: kanji, isTarget: true }));
+  
+  let availableDummies = DUMMY_KANJI_POOL.filter(k => !theme.targets.includes(k)).sort(() => Math.random() - 0.5);
+  for (let i = 0; i < 20; i++) {
+    panels.push({ kanji: availableDummies[i % availableDummies.length], isTarget: false });
+  }
+  panels.sort(() => Math.random() - 0.5);
+
+  modal.innerHTML = `
+    <div class="special-stage-container">
+      <div class="special-header">
+        <div class="special-title">⭐ ボーナスステージ！</div>
+        <div class="special-theme-box">テーマ: 【${theme.name}】の漢字を探せ！</div>
+        <div class="special-timer" id="special-timer-display">⏱ 15秒</div>
+      </div>
+      <div class="special-grid" id="special-grid"></div>
+    </div>
+  `;
+  
+  document.getElementById('game-container').appendChild(modal);
+  
+  const grid = document.getElementById('special-grid');
+  panels.forEach((p) => {
+    const btn = document.createElement('div');
+    btn.className = 'special-panel';
+    btn.innerText = p.kanji;
+    btn.onclick = () => {
+      if (btn.classList.contains('hit') || btn.classList.contains('miss')) return;
+      if (p.isTarget) {
+        btn.classList.add('hit');
+        playSE('hit');
+        specialScore += 10;
+        remainingTargets--;
+        if (remainingTargets <= 0) {
+          endSpecialStage(true);
+        }
+      } else {
+        btn.classList.add('miss');
+        playSE('miss');
+        specialScore = Math.max(0, specialScore - 5);
+      }
+    };
+    grid.appendChild(btn);
+  });
+
+  const specialInterval = setInterval(() => {
+    specialTimer--;
+    const timerEl = document.getElementById('special-timer-display');
+    if (timerEl) timerEl.innerText = `⏱ ${specialTimer}秒`;
+    if (specialTimer <= 0) {
+      clearInterval(specialInterval);
+      endSpecialStage(false);
+    }
+  }, 1000);
+
+  function endSpecialStage(isComplete) {
+    clearInterval(specialInterval);
+    playSE('fanfare');
+    triggerConfetti();
+    
+    modal.innerHTML = `
+      <div class="modal-card">
+        <h2 class="win">✨ ボーナスステージ ${isComplete ? 'パーフェクト！' : '終了！'}</h2>
+        <p>獲得ボーナスポイント: <strong>+${specialScore} pt</strong></p>
+        <div class="modal-btns">
+          <button class="btn btn-next" id="close-special-btn">つぎへ</button>
+        </div>
+      </div>
+    `;
+
+    const targetPoints = totalPoints + specialScore;
+    rollUpPoints(targetPoints, () => {
+      document.getElementById('close-special-btn').onclick = () => {
+        modal.remove();
+        startStage();
+      };
+    });
+  }
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('sound-btn');
+  if (btn) {
+    btn.innerText = soundEnabled ? '🔊 ON' : '🔇 OFF';
+  }
+}
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      audioCtx = new AudioCtx();
+    }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playSE(type) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  if (type === 'click') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+    osc.start(now);
+    osc.stop(now + 0.05);
+  } else if (type === 'correct') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(523.25, now);
+    osc.frequency.setValueAtTime(659.25, now + 0.08);
+    osc.frequency.setValueAtTime(783.99, now + 0.16);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  } else if (type === 'wrong') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.setValueAtTime(140, now + 0.1);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    osc.start(now);
+    osc.stop(now + 0.25);
+  } else if (type === 'zoomIn') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(900, now + 0.2);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    osc.start(now);
+    osc.stop(now + 0.2);
+  } else if (type === 'rollup') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800 + Math.random() * 200, now);
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+    osc.start(now);
+    osc.stop(now + 0.03);
+  } else if (type === 'milestone' || type === 'fanfare') {
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((freq, idx) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(freq, now + idx * 0.08);
+      g.gain.setValueAtTime(0.2, now + idx * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+      o.start(now + idx * 0.08);
+      o.stop(now + idx * 0.08 + 0.2);
+    });
+  } else if (type === 'goal') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.exponentialRampToValueAtTime(1760, now + 0.5);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    osc.start(now);
+    osc.stop(now + 0.5);
+  } else if (type === 'orbit') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1000 + Math.random() * 400, now);
+    gain.gain.setValueAtTime(0.04, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+    osc.start(now);
+    osc.stop(now + 0.03);
+  } else if (type === 'hit') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, now);
+    osc.frequency.setValueAtTime(880, now + 0.06);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } else if (type === 'miss') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(150, now);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } else if (type === 'timeup') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    osc.start(now);
+    osc.stop(now + 0.4);
+  }
+}
+
+function triggerConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+
+  const particles = [];
+  const colors = ['#f43f5e', '#38bdf8', '#a855f7', '#4ade80', '#facc15', '#fb923c'];
+
+  for (let i = 0; i < 80; i++) {
+    particles.push({
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 14,
+      vy: (Math.random() - 0.7) * 14,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360,
+      vRot: (Math.random() - 0.5) * 10,
+      opacity: 1
+    });
+  }
+
+  let animationFrame;
+  function update() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let active = false;
+
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.35;
+      p.rotation += p.vRot;
+      p.opacity -= 0.015;
+
+      if (p.opacity > 0) {
+        active = true;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.opacity);
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.restore();
+      }
+    });
+
+    if (active) {
+      animationFrame = requestAnimationFrame(update);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      cancelAnimationFrame(animationFrame);
+    }
+  }
+
+  update();
+}
+
+function showStartModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'start-modal';
+  modal.innerHTML = `
+    <div class="start-hero-card">
+      <div class="puzzle-piece-container">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.236 1.234-.706 1.704l-1.568 1.568c-.23.23-.338.556-.289.878.119.782-.047 1.583-.508 2.228s-1.168 1.054-1.968 1.15c-.322.049-.607.218-.781.493l-1.042 1.65c-.353.56-.893.978-1.521 1.176s-1.303.119-1.901-.22l-1.637-.932c-.283-.161-.622-.185-.924-.064l-1.761.705c-.628.251-1.319.231-1.933-.056s-1.096-.788-1.353-1.42l-.705-1.761c-.121-.302-.387-.52-.705-.584l-1.841-.368c-.663-.133-1.242-.518-1.618-1.077s-.502-1.246-.352-1.897l.42-1.815c.074-.317-.008-.65-.221-.893l-1.288-1.472c-.445-.509-.652-1.175-.58-1.846s.397-1.282.91-1.704l1.503-1.238c.253-.208.389-.523.364-.848l-.146-1.871c-.053-.672.181-1.332.655-1.832s1.121-.796 1.802-.828l1.876-.089c.325-.015.617-.183.782-.464l1.108-1.884c.382-.65 1.002-1.108 1.733-1.281s1.494.02 2.132.535l1.494 1.205c.253.204.59.263.896.157l1.791-.62c.642-.222 1.341-.161 1.956.172s1.077.886 1.293 1.545l.598 1.828c.102.311.345.554.656.656l1.828.598c.659.216 1.212.678 1.545 1.293s.394 1.314.172 1.956l-.62 1.791c-.106.306-.047.643.157.896l1.205 1.494c.515.638.708 1.401.535 2.132s-.631 1.351-1.281 1.733l-1.884 1.108c-.281.165-.449.457-.464.782l-.089 1.876c-.032.681-.328 1.328-.828 1.802s-1.16.708-1.832.655l-1.871-.146c-.325-.025-.64.111-.848.364l-1.238 1.503c-.422.513-1.033.838-1.704.91s-1.337-.135-1.846-.58l-1.472-1.288c-.243-.213-.576-.295-.893-.221l-1.815.42c-.651.15-1.338.024-1.897-.352s-.944-.955-1.077-1.618l-.368-1.841c-.064-.318-.282-.584-.584-.705l-1.761-.705c-.632-.257-1.133-.739-1.42-1.353s-.307-1.305-.056-1.933l.705-1.761c.121-.302.097-.641-.064-.924l-.932-1.637c-.339-.598-.418-1.273-.22-1.901s.616-1.168 1.176-1.521l1.65-1.042c.275-.174.444-.459.493-.781z"/>
+        </svg>
+      </div>
+      <div class="start-hero-title">熟語パズル</div>
+      <div class="start-hero-badge">完全版</div>
+      <div class="start-hero-desc">
+        問題の「意味」に合わせて、漢字カードをスワイプ＆ドロップ！<br>
+        周回のコマを進めて、ゴールを目指しましょう！
+      </div>
+      <button class="start-play-btn" onclick="startGameFromStartModal()">ゲームスタート</button>
+    </div>
+  `;
+  document.getElementById('game-container').appendChild(modal);
+}
+
+function startGameFromStartModal() {
+  initAudio();
+  playSE('click');
+  const modal = document.getElementById('start-modal');
+  if (modal) modal.remove();
+  
+  initTrack();
+  resetDeck();
+  startStage();
+}
+
+window.addEventListener('load', () => {
+  initTrack();
+  showStartModal();
+});
+
+window.addEventListener('resize', () => {
+  initTrack();
+});
+</script>
+</body>
+</html>
