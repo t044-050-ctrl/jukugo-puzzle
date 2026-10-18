@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>熟語パズル</title>
- <meta property="og:title" content="熟語パズル">
-    <meta property="og:description" content="意味に合った熟語を作るゲームです。">
-    <meta property="og:type" content="website">
 <style>
   * { 
     box-sizing: border-box; 
@@ -14,7 +11,7 @@
     padding: 0; 
     user-select: none; 
     -webkit-user-select: none;
-    -webkit-touch-callout: none;
+    -webkit-touch-callout: none; /* iOS等の長押しコンテキストメニュー無効化 */
     -webkit-tap-highlight-color: transparent; 
   }
   body {
@@ -610,7 +607,6 @@
     letter-spacing: 2px;
   }
 
-  /* ボーナスステージ用スタイル */
   .special-stage-container {
     background: linear-gradient(135deg, #0f172a, #1e1b4b);
     border: 2px solid #818cf8;
@@ -745,7 +741,7 @@
 
       <!-- 右側：漢字カード置き場 -->
       <div id="card-pool-container">
-        <div class="pool-title">漢字カード（スワイプ）</div>
+        <div class="pool-title">漢字カード (スワイプ/タップ)</div>
         <div id="card-pool" ondragover="allowDrop(event)" ondrop="dropToPool(event)"></div>
       </div>
     </div>
@@ -753,11 +749,13 @@
 </div>
 
 <script>
+// 長押しやコンテキストメニュー表示を画面全体で一括無効化
 document.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   return false;
 });
 
+// 二本指タップ等による不要なジェスチャーやズーム動作を阻止
 document.addEventListener('touchstart', (e) => {
   if (e.touches.length > 1) {
     e.preventDefault();
@@ -1080,96 +1078,7 @@ const IDIOM_2CHAR_DATABASE = [
   { word: "失敗", reading: "しっぱい", meaning: "やり損なうこと" },
   { word: "希望", reading: "きぼう", meaning: "こうあってほしいと望むこと" },
   { word: "挑戦", reading: "ちょうせん", meaning: "困難なことや新しいことに挑むこと" },
-  { word: "成長", reading: "せいちょう", meaning: "体や能力が大きく伸び育つこと" },
-  { word: "才能", reading: "さいのう", meaning: "物事を成し遂げる優れた能力" },
-  { word: "参加", reading: "さんか", meaning: "行事や集まりに加わること" },
-  { word: "裁判", reading: "さいばん", meaning: "法律に基づいて正誤や罪を裁くこと" },
-  { word: "散歩", reading: "さんぽ", meaning: "気晴らしにぶらぶら歩くこと" },
-  { word: "賛成", reading: "さんせい", meaning: "意見や提案に同意すること" },
-  { word: "祝福", reading: "しゅくふく", meaning: "幸運やめでたい出来事を祝うこと" },
-  { word: "幸福", reading: "こうふく", meaning: "心が満ち足りて幸せなこと" },
-  { word: "制度", reading: "せいど", meaning: "社会や組織の決まりや仕組み" },
-  { word: "整理", reading: "せいり", meaning: "乱れたものを整えて片付けること" },
-  { word: "責任", reading: "せきにん", meaning: "引き受けて果たすべき立場や義務" },
-  { word: "支援", reading: "しえん", meaning: "力を貸して手助けをすること" },
-  { word: "想像", reading: "そうぞう", meaning: "頭の中で思い描くこと" },
-  { word: "創造", reading: "そうぞう", meaning: "新しいものを初めて作り出すこと" },
-  { word: "相談", reading: "そうだん", meaning: "意見を求めたり話し合ったりすること" },
-  { word: "装置", reading: "そうち", meaning: "特定の目的のために取り付けた道具や機器" },
-  { word: "尊敬", reading: "そんけい", meaning: "人の人柄や行為を尊び重んじること" },
-  { word: "存在", reading: "そんざい", meaning: "実際にそこにあること・生きていること" },
-  { word: "知識", reading: "ちしき", meaning: "知っている内容や学習で得た情報" },
-  { word: "地球", reading: "ちきゅう", meaning: "私たちが住んでいる天体" },
-  { word: "地域", reading: "ちいき", meaning: "区切られた一定の土地や範囲" },
-  { word: "注目", reading: "ちゅうもく", meaning: "心を寄せてしっかり見ること" },
-  { word: "注文", reading: "ちゅうもん", meaning: "品物や仕事を頼むこと" },
-  { word: "朝食", reading: "ちょうしょく", meaning: "朝にとる食事" },
-  { word: "調査", reading: "ちょうさ", meaning: "事実や状態を詳しく調べること" },
-  { word: "調整", reading: "ちょうせい", meaning: "具合やバランスを整えること" },
-  { word: "頂上", reading: "ちょうじょう", meaning: "山などのいちばん高い所" },
-  { word: "通過", reading: "つうか", meaning: "途中で通り抜けること" },
-  { word: "通信", reading: "つうしん", meaning: "情報や便りをやり取りすること" },
-  { word: "通勤", reading: "つうきん", meaning: "職場の会社へ通うこと" },
-  { word: "提案", reading: "ていあん", meaning: "意見や案を出すこと" },
-  { word: "停止", reading: "ていし", meaning: "動いているものを止めること" },
-  { word: "抵抗", reading: "ていこう", meaning: "外部からの力にはじらい逆らうこと" },
-  { word: "提出", reading: "ていしゅつ", meaning: "書類や作品を差し出すこと" },
-  { word: "程度", reading: "ていど", meaning: "物事の高さや広がり・レベル" },
-  { word: "伝統", reading: "でんとう", meaning: "代々受け継がれてきた風習や技術" },
-  { word: "伝言", reading: "でんごん", meaning: "人に託して言葉を伝えること" },
-  { word: "電卓", reading: "でんたく", meaning: "計算を行う小さな電子機器" },
-  { word: "電車", reading: "でんしゃ", meaning: "電気の力で走る列車" },
-  { word: "到着", reading: "とうちゃく", meaning: "目的の場所にたどり着くこと" },
-  { word: "投票", reading: "とうひょう", meaning: "選挙などで票を投じること" },
-  { word: "討議", reading: "とうぎ", meaning: "意見を出し合って話し合うこと" },
-  { word: "信頼", reading: "しんらい", meaning: "相手を信じて頼りにすること" },
-  { word: "信用", reading: "しんよう", meaning: "これまでの実績から信じること" },
-  { word: "慎重", reading: "しんちょう", meaning: "軽はずみを避け注意深い様子" },
-  { word: "新鮮", reading: "しんせん", meaning: "魚や野菜が新しく活きが良いこと" },
-  { word: "進歩", reading: "しんぽ", meaning: "物事がより良い方向へ進むこと" },
-  { word: "相手", reading: "あいて", meaning: "ともに物事を行う対象の人" },
-  { word: "発見", reading: "はっけん", meaning: "まだ知られていないものを見つけること" },
-  { word: "発明", reading: "はつめい", meaning: "今までにない新しい物を作り出すこと" },
-  { word: "発展", reading: "はってん", meaning: "物事の勢いが広がり伸びること" },
-  { word: "発表", reading: "はっぴょう", meaning: "大勢の前で公に知らせること" },
-  { word: "発行", reading: "はっこう", meaning: "書籍や紙幣などを世に出すこと" },
-  { word: "発車", reading: "はっしゃ", meaning: "電車やバスなどが動き出すこと" },
-  { word: "判断", reading: "はんだん", meaning: "物事の真偽や優劣を決定すること" },
-  { word: "反対", reading: "はんたい", meaning: "意見や提案に承知しないこと" },
-  { word: "比較", reading: "ひかく", meaning: "二つ以上のものをくらべること" },
-  { word: "批判", reading: "ひはん", meaning: "判定して評価や欠点を指摘すること" },
-  { word: "非常", reading: "ひじょう", meaning: "普通とは異なり緊急であること" },
-  { word: "評価", reading: "ひょうか", meaning: "価値や値段を見定めること" },
-  { word: "評判", reading: "ひょうばん", meaning: "世間の人々からの評価や噂" },
-  { word: "表面", reading: "ひょうめん", meaning: "物事の外側の面" },
-  { word: "表現", reading: "ひょうげん", meaning: "思いや感情を言葉や形で表すこと" },
-  { word: "表示", reading: "ひょうじ", meaning: "表に示してはっきり見せること" },
-  { word: "表情", reading: "ひょうじょう", meaning: "顔つきに現れる気持ちの状態" },
-  { word: "平等", reading: "びょうどう", meaning: "差別なく偏りがないこと" },
-  { word: "普及", reading: "ふきゅう", meaning: "広く行き渡り親しまれること" },
-  { word: "複雑", reading: "ふくざつ", meaning: "事情や仕組みが込み入っていること" },
-  { word: "復活", reading: "ふっかつ", meaning: "一度衰えたものがよみがえること" },
-  { word: "復習", reading: "ふくしゅう", meaning: "習ったことをおさらいすること" },
-  { word: "目的", reading: "もくてき", meaning: "目指している事柄やあて" },
-  { word: "目標", reading: "もくひょう", meaning: "目指す具体的な当てや標識" },
-  { word: "容易", reading: "ようい", meaning: "たやすく簡単にできる様子" },
-  { word: "要求", reading: "ようきゅう", meaning: "強く求めること" },
-  { word: "要素", reading: "ようそ", meaning: "物事を成り立たせる基本的な成分" },
-  { word: "予防", reading: "よぼう", meaning: "悪い事態が起こらないよう防ぐこと" },
-  { word: "予約", reading: "よやく", meaning: "前もって取り決めておくこと" },
-  { word: "理想", reading: "りそう", meaning: "考え得る最も望ましい姿" },
-  { word: "理解", reading: "りかい", meaning: "物事の意味や理由を飲み込むこと" },
-  { word: "流行", reading: "りゅうこう", meaning: "世間に広くもてはやされ広まること" },
-  { word: "連絡", reading: "れんらく", meaning: "情報や意思を伝え合うこと" },
-  { word: "練習", reading: "れんしゅう", meaning: "上達のために繰り返し行うこと" },
-  { word: "連続", reading: "れんぞく", meaning: "途切れずに続いて起こること" },
-  { word: "勇気", reading: "ゆうき", meaning: "恐れずに立ち向かう強い心" },
-  { word: "勝利", reading: "しょうり", meaning: "戦いや試合で勝ちを得ること" },
-  { word: "敗北", reading: "はいぼく", meaning: "戦いに負けて敗れること" },
-  { word: "誠実", reading: "せいじつ", meaning: "真面目で偽りがない様子" },
-  { word: "純粋", reading: "じゅんすい", meaning: "混ざり気がなく清らかな心" },
-  { word: "情熱", reading: "じょうねつ", meaning: "熱く激しい気持ちや感情" },
-  { word: "礼儀", reading: "れいぎ", meaning: "社会生活の正しい作法" }
+  { word: "成長", reading: "せいちょう", meaning: "体や能力が大きく伸び育つこと" }
 ];
 
 const IDIOM_MULTICHAR_DATABASE = [
@@ -1193,30 +1102,7 @@ const IDIOM_MULTICHAR_DATABASE = [
   { word: "一生懸命", reading: "いっしょうけんめい", meaning: "命がけで真面目に取り組み努力すること" },
   { word: "自業自得", reading: "じごうじとく", meaning: "自分の行いの報いを自身が受けること" },
   { word: "十人十色", reading: "じゅうにんといろ", meaning: "考えや好みが人それぞれ異なること" },
-  { word: "以心伝心", reading: "いしんでんしん", meaning: "言葉に出さなくても気持ちが通じ合うこと" },
-  { word: "四苦八苦", reading: "しくはっく", meaning: "大変な苦労や悩みをすること" },
-  { word: "千載一遇", reading: "せんざいいちぐう", meaning: "めったにない絶好の機会" },
-  { word: "一朝一夕", reading: "いっちょういっせき", meaning: "わずかごく短い時間のこと" },
-  { word: "起死回生", reading: "きしかいせい", meaning: "絶望的な状態から立ち直らせること" },
-  { word: "日常茶飯", reading: "にちじょうさはん", meaning: "当たり前の毎日の出来事" },
-  { word: "五分五分", reading: "ごぶごぶ", meaning: "両者の勢力や勝敗が等しいこと" },
-  { word: "百発百中", reading: "ひゃっぱつひゃくちゅう", meaning: "計画や予想がすべて当たること" },
-  { word: "前代未聞", reading: "ぜんだいみもん", meaning: "これまでに聞いたこともない珍しいこと" },
-  { word: "正真正銘", reading: "しょうしんしょうめい", meaning: "嘘偽りがなく本物であること" },
-  { word: "支離滅裂", reading: "しりめつれつ", meaning: "筋道が立ちゆかずバラバラなこと" },
-  { word: "危機一髪", reading: "ききいっぱつ", meaning: "きわめて危険で切迫した状態" },
-  { word: "無我夢中", reading: "むがむちゅう", meaning: "心を奪われ我を忘れて熱中すること" },
-  { word: "悪戦苦闘", reading: "あくせんくとう", meaning: "困難な状況で死力を尽くして戦うこと" },
-  { word: "電光石火", reading: "でんこうせっか", meaning: "動作や動きがきわめて素早い様子" },
-  { word: "自画自賛", reading: "じがじさん", meaning: "自分のしたことを自分でほめること" },
-  { word: "適材適所", reading: "てきざいてきしょ", meaning: "能力に適した職務につけること" },
-  { word: "有名無実", reading: "ゆうめいむじつ", meaning: "名ばかりで実質が伴わないこと" },
-  { word: "大同小異", reading: "だいどうしょうい", meaning: "細かい違いはあってもほぼ同じなこと" },
-  { word: "臨機応変", reading: "りんきおうへん", meaning: "状況の変化に応じて適切に対処すること" },
-  { word: "七転八起", reading: "ななころびやおき", meaning: "何度失敗しても諦めずに立ち上がること" },
-  { word: "切磋琢磨", reading: "せっさたくま", meaning: "互いに磨き合って向上すること" },
-  { word: "一期一会", reading: "いちごいちえ", meaning: "生涯に一度限りの貴重な出会い" },
-  { word: "猪突猛進", reading: "ちょとつもうしん", meaning: "目標に向かってまっすぐ突き進むこと" }
+  { word: "以心伝心", reading: "いしんでんしん", meaning: "言葉に出さなくても気持ちが通じ合うこと" }
 ];
 
 const SPECIAL_STAGE_THEMES = [
@@ -2026,140 +1912,234 @@ function showGoalModal() {
   modal.className = 'modal-overlay';
   modal.innerHTML = `
     <div class="modal-card">
-      <h2 class="win">🏆 GOAL! 1周クリア！</h2>
-      <p>おめでとうございます！<br>すべてのマスコースを完走しました！<br><br>最終スコア: <strong>${totalPoints} pt</strong></p>
+      <h2 class="win">🏆 ゴール達成！</h2>
+      <p>おめでとうございます！外周50マス完走！<br>現在ポイント: <strong>${totalPoints} pt</strong></p>
       <div class="modal-btns">
-        <button class="btn btn-next" onclick="restartGame()">もう一度遊ぶ</button>
+        <button class="btn btn-next" onclick="nextStageFromGoal(this)">つぎのステージへ</button>
       </div>
     </div>
   `;
   document.getElementById('game-container').appendChild(modal);
 }
 
-function restartGame() {
-  document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+function nextStageFromGoal(btn) {
+  cleanupTouchState();
+  btn.closest('.modal-overlay').remove();
   currentPosition = 0;
-  currentStage = 1;
-  totalPoints = 0;
-  nextSpecialStageMilestone = 500;
-  document.getElementById('points-display').innerText = `⭐ 0 pt`;
   updateTrackUI();
-  resetDeck();
-  startStage();
+  checkSpecialStageOrNext();
+}
+
+function startSpecialStage() {
+  cleanupTouchState();
+  const themeObj = SPECIAL_STAGE_THEMES[Math.floor(Math.random() * SPECIAL_STAGE_THEMES.length)];
+  
+  const shuffledTargets = [...themeObj.targets].sort(() => Math.random() - 0.5).slice(0, 15);
+  const shuffledDummies = [...DUMMY_KANJI_POOL].filter(k => !themeObj.targets.includes(k)).sort(() => Math.random() - 0.5).slice(0, 25);
+  
+  let panelsData = [
+    ...shuffledTargets.map(k => ({ kanji: k, isTarget: true })),
+    ...shuffledDummies.map(k => ({ kanji: k, isTarget: false }))
+  ].sort(() => Math.random() - 0.5);
+
+  let foundCount = 0;
+  let specialTimer = 30;
+  let specialTimerInterval = null;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="special-stage-container">
+      <div class="special-header">
+        <div class="special-title">⭐ 特別ボーナスステージ ⭐</div>
+        <div class="special-theme-box">テーマ：【 ${themeObj.name} 】（あと <span id="special-rem-count">15</span> / 15 個）</div>
+        <div class="special-timer" id="special-timer-display">⏱ 30秒</div>
+      </div>
+      <div class="special-grid" id="special-grid"></div>
+    </div>
+  `;
+  document.getElementById('game-container').appendChild(modal);
+
+  const grid = modal.querySelector('#special-grid');
+
+  panelsData.forEach((item) => {
+    const btn = document.createElement('div');
+    btn.className = 'special-panel';
+    btn.innerText = item.kanji;
+
+    btn.onclick = () => {
+      if (btn.classList.contains('hit') || btn.classList.contains('miss')) return;
+
+      if (item.isTarget) {
+        btn.classList.add('hit');
+        playSE('correct');
+        foundCount++;
+        modal.querySelector('#special-rem-count').innerText = 15 - foundCount;
+
+        if (foundCount >= 15) {
+          endSpecialStage(true);
+        }
+      } else {
+        btn.classList.add('miss');
+        playSE('wrong');
+        setTimeout(() => btn.classList.remove('miss'), 400);
+      }
+    };
+
+    grid.appendChild(btn);
+  });
+
+  playSE('fanfare');
+
+  specialTimerInterval = setInterval(() => {
+    specialTimer--;
+    const tDisp = modal.querySelector('#special-timer-display');
+    if (tDisp) tDisp.innerText = `⏱ ${specialTimer}秒`;
+
+    if (specialTimer <= 0) {
+      endSpecialStage(false);
+    }
+  }, 1000);
+
+  function endSpecialStage(allFound) {
+    clearInterval(specialTimerInterval);
+    playSE('milestone');
+    triggerConfetti();
+
+    const hitPoints = foundCount * 10;
+    const timePoints = Math.max(0, specialTimer) * 2;
+    const gained = hitPoints + timePoints;
+    const targetP = totalPoints + gained;
+
+    const resultModal = document.createElement('div');
+    resultModal.className = 'modal-overlay';
+    resultModal.innerHTML = `
+      <div class="stage-clear-banner">
+        <h2>${allFound ? '🎊 コンプリート達成！' : '⏱ 特別ステージ終了！'}</h2>
+        <p>正解数: <strong>${foundCount} / 15</strong> (${hitPoints}pt)</p>
+        <p>残り時間ボーナス: <strong>${specialTimer}秒</strong> (${timePoints}pt)</p>
+        <h3 style="font-size: 24px; color: #fef08a; margin-top: 10px;">合計 ＋${gained} pt 獲得！</h3>
+      </div>
+    `;
+    modal.remove();
+    document.getElementById('game-container').appendChild(resultModal);
+
+    setTimeout(() => {
+      resultModal.remove();
+      rollUpPoints(targetP, () => {
+        startStage();
+      });
+    }, 2200);
+  }
 }
 
 function handleTimeUp() {
   playSE('timeup');
+  penalizePosition(5);
+
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   modal.innerHTML = `
     <div class="modal-card">
       <h2>⏰ タイムアップ！</h2>
-      <p>制限時間が終了しました。<br>現在のスコア: <strong>${totalPoints} pt</strong></p>
+      <p>時間が切れました！マスが 5 つ戻ります。</p>
       <div class="modal-btns">
-        <button class="btn btn-retry" onclick="retryStage()">やり直す</button>
-        <button class="btn btn-quit" onclick="restartGame()">最初から</button>
+        <button class="btn btn-retry" onclick="retryStage(this)">もう一度挑戦</button>
+        <button class="btn btn-quit" onclick="resetGame(this)">最初から</button>
       </div>
     </div>
   `;
   document.getElementById('game-container').appendChild(modal);
 }
 
-function retryStage() {
-  document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+function retryStage(btn) {
+  cleanupTouchState();
+  btn.closest('.modal-overlay').remove();
   startStage();
 }
 
-function startSpecialStage() {
-  clearInterval(timerInterval);
-  playSE('milestone');
-  
-  const theme = SPECIAL_STAGE_THEMES[Math.floor(Math.random() * SPECIAL_STAGE_THEMES.length)];
-  let specialTimer = 15;
-  let specialScore = 0;
-  let remainingTargets = theme.targets.length;
+function resetGame(btn) {
+  cleanupTouchState();
+  btn.closest('.modal-overlay').remove();
+  currentPosition = 0;
+  currentStage = 1;
+  totalPoints = 0;
+  nextSpecialStageMilestone = 500;
+  updateTrackUI();
+  resetDeck();
+  showStartModal();
+}
+
+function showStartModal() {
+  cleanupTouchState();
+  const existingModal = document.getElementById('start-modal');
+  if (existingModal) existingModal.remove();
 
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
-  
-  let panels = [];
-  theme.targets.forEach(kanji => panels.push({ kanji: kanji, isTarget: true }));
-  
-  let availableDummies = DUMMY_KANJI_POOL.filter(k => !theme.targets.includes(k)).sort(() => Math.random() - 0.5);
-  for (let i = 0; i < 20; i++) {
-    panels.push({ kanji: availableDummies[i % availableDummies.length], isTarget: false });
-  }
-  panels.sort(() => Math.random() - 0.5);
-
+  modal.id = 'start-modal';
   modal.innerHTML = `
-    <div class="special-stage-container">
-      <div class="special-header">
-        <div class="special-title">⭐ ボーナスステージ！</div>
-        <div class="special-theme-box">テーマ: 【${theme.name}】の漢字を探せ！</div>
-        <div class="special-timer" id="special-timer-display">⏱ 15秒</div>
+    <div class="start-hero-card">
+      <div class="puzzle-piece-container">
+        <svg viewBox="0 0 120 120" width="96" height="96">
+          <defs>
+            <linearGradient id="puzzleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#38bdf8" />
+              <stop offset="35%" stop-color="#818cf8" />
+              <stop offset="70%" stop-color="#c084fc" />
+              <stop offset="100%" stop-color="#f43f5e" />
+            </linearGradient>
+            <filter id="puzzleGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#a855f7" flood-opacity="0.6"/>
+            </filter>
+          </defs>
+          <path d="
+            M 36,36 
+            L 52,36 
+            C 48,22 42,14 60,14 
+            C 78,14 72,22 68,36 
+            L 84,36 
+            L 84,52 
+            C 98,48 106,42 106,60 
+            C 106,78 98,72 84,68 
+            L 84,84 
+            L 68,84 
+            C 72,98 78,106 60,106 
+            C 42,106 48,98 52,84 
+            L 36,84 
+            L 36,68 
+            C 50,72 58,78 58,60 
+            C 58,42 50,48 36,52 
+            Z" 
+            fill="url(#puzzleGrad)" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" filter="url(#puzzleGlow)"/>
+        </svg>
       </div>
-      <div class="special-grid" id="special-grid"></div>
+      <div class="start-hero-badge">KANJI PUZZLE GAME</div>
+      <h1 class="start-hero-title">熟語パズル</h1>
+      <p class="start-hero-desc">
+        漢字カードをスワイプ！<br>
+        意味に合う熟語をすばやく完成させて<br>
+        50マスのゴールをめざそう！
+      </p>
+      <button class="start-play-btn" onclick="startGameFromModal(this)">GAME START</button>
     </div>
   `;
-  
   document.getElementById('game-container').appendChild(modal);
-  
-  const grid = document.getElementById('special-grid');
-  panels.forEach((p) => {
-    const btn = document.createElement('div');
-    btn.className = 'special-panel';
-    btn.innerText = p.kanji;
-    btn.onclick = () => {
-      if (btn.classList.contains('hit') || btn.classList.contains('miss')) return;
-      if (p.isTarget) {
-        btn.classList.add('hit');
-        playSE('hit');
-        specialScore += 10;
-        remainingTargets--;
-        if (remainingTargets <= 0) {
-          endSpecialStage(true);
-        }
-      } else {
-        btn.classList.add('miss');
-        playSE('miss');
-        specialScore = Math.max(0, specialScore - 5);
-      }
-    };
-    grid.appendChild(btn);
-  });
+}
 
-  const specialInterval = setInterval(() => {
-    specialTimer--;
-    const timerEl = document.getElementById('special-timer-display');
-    if (timerEl) timerEl.innerText = `⏱ ${specialTimer}秒`;
-    if (specialTimer <= 0) {
-      clearInterval(specialInterval);
-      endSpecialStage(false);
-    }
-  }, 1000);
+function startGameFromModal(btn) {
+  initAudio();
+  const modal = btn.closest('.modal-overlay');
+  if (modal) modal.remove();
+  startStage();
+}
 
-  function endSpecialStage(isComplete) {
-    clearInterval(specialInterval);
-    playSE('fanfare');
-    triggerConfetti();
-    
-    modal.innerHTML = `
-      <div class="modal-card">
-        <h2 class="win">✨ ボーナスステージ ${isComplete ? 'パーフェクト！' : '終了！'}</h2>
-        <p>獲得ボーナスポイント: <strong>+${specialScore} pt</strong></p>
-        <div class="modal-btns">
-          <button class="btn btn-next" id="close-special-btn">つぎへ</button>
-        </div>
-      </div>
-    `;
-
-    const targetPoints = totalPoints + specialScore;
-    rollUpPoints(targetPoints, () => {
-      document.getElementById('close-special-btn').onclick = () => {
-        modal.remove();
-        startStage();
-      };
-    });
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
   }
 }
 
@@ -2171,121 +2151,115 @@ function toggleSound() {
   }
 }
 
-function initAudio() {
-  if (!audioCtx) {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (AudioCtx) {
-      audioCtx = new AudioCtx();
-    }
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-}
-
 function playSE(type) {
   if (!soundEnabled) return;
   initAudio();
   if (!audioCtx) return;
 
   const now = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
 
-  if (type === 'click') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(600, now);
-    osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-    osc.start(now);
-    osc.stop(now + 0.05);
-  } else if (type === 'correct') {
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(523.25, now);
-    osc.frequency.setValueAtTime(659.25, now + 0.08);
-    osc.frequency.setValueAtTime(783.99, now + 0.16);
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-    osc.start(now);
-    osc.stop(now + 0.3);
-  } else if (type === 'wrong') {
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.setValueAtTime(140, now + 0.1);
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-    osc.start(now);
-    osc.stop(now + 0.25);
-  } else if (type === 'zoomIn') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(300, now);
-    osc.frequency.exponentialRampToValueAtTime(900, now + 0.2);
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-    osc.start(now);
-    osc.stop(now + 0.2);
-  } else if (type === 'rollup') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800 + Math.random() * 200, now);
-    gain.gain.setValueAtTime(0.05, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
-    osc.start(now);
-    osc.stop(now + 0.03);
-  } else if (type === 'milestone' || type === 'fanfare') {
-    const notes = [523.25, 659.25, 783.99, 1046.50];
-    notes.forEach((freq, idx) => {
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.connect(g);
-      g.connect(audioCtx.destination);
-      o.type = 'triangle';
-      o.frequency.setValueAtTime(freq, now + idx * 0.08);
-      g.gain.setValueAtTime(0.2, now + idx * 0.08);
-      g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
-      o.start(now + idx * 0.08);
-      o.stop(now + idx * 0.08 + 0.2);
-    });
-  } else if (type === 'goal') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, now);
-    osc.frequency.exponentialRampToValueAtTime(1760, now + 0.5);
-    gain.gain.setValueAtTime(0.25, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-    osc.start(now);
-    osc.stop(now + 0.5);
-  } else if (type === 'orbit') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1000 + Math.random() * 400, now);
-    gain.gain.setValueAtTime(0.04, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
-    osc.start(now);
-    osc.stop(now + 0.03);
-  } else if (type === 'hit') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, now);
-    osc.frequency.setValueAtTime(880, now + 0.06);
-    gain.gain.setValueAtTime(0.18, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-    osc.start(now);
-    osc.stop(now + 0.15);
-  } else if (type === 'miss') {
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(150, now);
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-    osc.start(now);
-    osc.stop(now + 0.15);
-  } else if (type === 'timeup') {
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(300, now);
-    osc.frequency.exponentialRampToValueAtTime(100, now + 0.4);
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-    osc.start(now);
-    osc.stop(now + 0.4);
+  try {
+    if (type === 'click') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } else if (type === 'correct') {
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+        gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.2);
+      });
+    } else if (type === 'wrong') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.linearRampToValueAtTime(120, now + 0.25);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (type === 'zoomIn') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(900, now + 0.3);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (type === 'rollup') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800 + Math.random() * 200, now);
+      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.03);
+    } else if (type === 'milestone' || type === 'fanfare') {
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+        gain.gain.setValueAtTime(0.25, now + idx * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.4);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.1);
+        osc.stop(now + idx * 0.1 + 0.4);
+      });
+    } else if (type === 'orbit') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400 + Math.random() * 600, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.005, now + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } else if (type === 'timeup') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(250, now);
+      osc.frequency.linearRampToValueAtTime(100, now + 0.5);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.5);
+    }
+  } catch (e) {
+    // Web Audioエラーの自動無視
   }
 }
 
@@ -2294,19 +2268,18 @@ function triggerConfetti() {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width;
-  canvas.height = rect.height;
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
 
   const particles = [];
-  const colors = ['#f43f5e', '#38bdf8', '#a855f7', '#4ade80', '#facc15', '#fb923c'];
+  const colors = ['#f43f5e', '#38bdf8', '#34d399', '#fbbf24', '#a855f7', '#ec4899'];
 
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 70; i++) {
     particles.push({
       x: canvas.width / 2,
       y: canvas.height / 2,
       vx: (Math.random() - 0.5) * 14,
-      vy: (Math.random() - 0.7) * 14,
+      vy: (Math.random() - 0.8) * 14,
       size: Math.random() * 8 + 4,
       color: colors[Math.floor(Math.random() * colors.length)],
       rotation: Math.random() * 360,
@@ -2316,23 +2289,23 @@ function triggerConfetti() {
   }
 
   let animationFrame;
-  function update() {
+  function updateConfetti() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     let active = false;
 
     particles.forEach(p => {
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.35;
+      p.vy += 0.3; // 重力
       p.rotation += p.vRot;
       p.opacity -= 0.015;
 
       if (p.opacity > 0) {
         active = true;
         ctx.save();
-        ctx.globalAlpha = Math.max(0, p.opacity);
         ctx.translate(p.x, p.y);
         ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.globalAlpha = Math.max(0, p.opacity);
         ctx.fillStyle = p.color;
         ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
         ctx.restore();
@@ -2340,58 +2313,21 @@ function triggerConfetti() {
     });
 
     if (active) {
-      animationFrame = requestAnimationFrame(update);
+      animationFrame = requestAnimationFrame(updateConfetti);
     } else {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       cancelAnimationFrame(animationFrame);
     }
   }
 
-  update();
+  updateConfetti();
 }
 
-function showStartModal() {
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.id = 'start-modal';
-  modal.innerHTML = `
-    <div class="start-hero-card">
-      <div class="puzzle-piece-container">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.236 1.234-.706 1.704l-1.568 1.568c-.23.23-.338.556-.289.878.119.782-.047 1.583-.508 2.228s-1.168 1.054-1.968 1.15c-.322.049-.607.218-.781.493l-1.042 1.65c-.353.56-.893.978-1.521 1.176s-1.303.119-1.901-.22l-1.637-.932c-.283-.161-.622-.185-.924-.064l-1.761.705c-.628.251-1.319.231-1.933-.056s-1.096-.788-1.353-1.42l-.705-1.761c-.121-.302-.387-.52-.705-.584l-1.841-.368c-.663-.133-1.242-.518-1.618-1.077s-.502-1.246-.352-1.897l.42-1.815c.074-.317-.008-.65-.221-.893l-1.288-1.472c-.445-.509-.652-1.175-.58-1.846s.397-1.282.91-1.704l1.503-1.238c.253-.208.389-.523.364-.848l-.146-1.871c-.053-.672.181-1.332.655-1.832s1.121-.796 1.802-.828l1.876-.089c.325-.015.617-.183.782-.464l1.108-1.884c.382-.65 1.002-1.108 1.733-1.281s1.494.02 2.132.535l1.494 1.205c.253.204.59.263.896.157l1.791-.62c.642-.222 1.341-.161 1.956.172s1.077.886 1.293 1.545l.598 1.828c.102.311.345.554.656.656l1.828.598c.659.216 1.212.678 1.545 1.293s.394 1.314.172 1.956l-.62 1.791c-.106.306-.047.643.157.896l1.205 1.494c.515.638.708 1.401.535 2.132s-.631 1.351-1.281 1.733l-1.884 1.108c-.281.165-.449.457-.464.782l-.089 1.876c-.032.681-.328 1.328-.828 1.802s-1.16.708-1.832.655l-1.871-.146c-.325-.025-.64.111-.848.364l-1.238 1.503c-.422.513-1.033.838-1.704.91s-1.337-.135-1.846-.58l-1.472-1.288c-.243-.213-.576-.295-.893-.221l-1.815.42c-.651.15-1.338.024-1.897-.352s-.944-.955-1.077-1.618l-.368-1.841c-.064-.318-.282-.584-.584-.705l-1.761-.705c-.632-.257-1.133-.739-1.42-1.353s-.307-1.305-.056-1.933l.705-1.761c.121-.302.097-.641-.064-.924l-.932-1.637c-.339-.598-.418-1.273-.22-1.901s.616-1.168 1.176-1.521l1.65-1.042c.275-.174.444-.459.493-.781z"/>
-        </svg>
-      </div>
-      <div class="start-hero-title">熟語パズル</div>
-      <div class="start-hero-badge">完全版</div>
-      <div class="start-hero-desc">
-        問題の「意味」に合わせて、漢字カードをスワイプ＆ドロップ！<br>
-        周回のコマを進めて、ゴールを目指しましょう！
-      </div>
-      <button class="start-play-btn" onclick="startGameFromStartModal()">ゲームスタート</button>
-    </div>
-  `;
-  document.getElementById('game-container').appendChild(modal);
-}
-
-function startGameFromStartModal() {
-  initAudio();
-  playSE('click');
-  const modal = document.getElementById('start-modal');
-  if (modal) modal.remove();
-  
+window.onload = function () {
   initTrack();
   resetDeck();
-  startStage();
-}
-
-window.addEventListener('load', () => {
-  initTrack();
   showStartModal();
-});
-
-window.addEventListener('resize', () => {
-  initTrack();
-});
+};
 </script>
 </body>
 </html>
