@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>熟語パズル</title>
  <meta property="og:title" content="熟語パズル">
-    <meta property="og:description" content="意味に合う熟語を漢字を組み合わせて作るゲームです。">
+    <meta property="og:description" content="意味に合う熟語を作るゲームです。">
     <meta property="og:type" content="website">
 <style>
   * { 
@@ -766,6 +766,7 @@ document.addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 const IDIOM_2CHAR_DATABASE = [
+
   { word: "挨拶", reading: "あいさつ", meaning: "出会った時や別れ際の礼儀の言葉" },
   { word: "愛情", reading: "あいじょう", meaning: "人を愛し慈しむ深い心" },
   { word: "合図", reading: "あいず", meaning: "身振りや音などで意図を伝えること" },
@@ -981,7 +982,7 @@ const IDIOM_2CHAR_DATABASE = [
   { word: "芸能", reading: "げいのう", meaning: "演劇や音楽などの技芸" },
   { word: "欠陥", reading: "けっかん", meaning: "欠けて不足している部分" },
   { word: "欠席", reading: "けっせき", meaning: "出席しないこと" },
-  { word: "決定", reading: "けってい", meaning: "方針や結論を solid に決めること" },
+  { word: "決定", reading: "けってい", meaning: "方針や結論をしっかり決めること" },
   { word: "決意", reading: "けつい", meaning: "心を固く決めること" },
   { word: "決算", reading: "けっさん", meaning: "勘定を計算し締めること" },
   { word: "結論", reading: "けつろん", meaning: "議論のまとめ・結果" },
@@ -1220,6 +1221,11 @@ const IDIOM_MULTICHAR_DATABASE = [
   { word: "猪突猛進", reading: "ちょとつもうしん", meaning: "目標に向かってまっすぐ突き進むこと" }
 ];
 
+
+
+ 
+
+
 const SPECIAL_STAGE_THEMES = [
   {
     name: "動物",
@@ -1244,23 +1250,23 @@ const SPECIAL_STAGE_THEMES = [
   {
     name: "天気",
     targets: ["雨", "雪", "雲", "霧", "雷", "風", "虹", "霞", "霜", "露", "嵐", "凪", "晴", "曇", "氷", "雹", "陽", "霙", "霰", "暖"]
-  },
+　},
   {
     name: "数",
     targets: ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "百", "千", "万", "億", "兆", "零", "壱", "弐", "参", "廿"]
-  },
+　},
   {
     name: "国",
     targets: ["日", "米", "仏", "独", "伊", "露", "中", "韓", "印", "越", "泰", "比", "豪", "加", "墨", "伯", "西", "蘭", "埃", "瑞"]
-  },
+　},
   {
     name: "鳥",
     targets: ["鶏", "鳩", "鴨", "鶴", "鷲", "鷹", "鷺", "雀", "烏", "燕", "雉", "鵜", "鷗", "梟", "鳶", "鴉", "鴫", "鵠", "雁", "鶉"]
   },
-  {
+  {　
     name: "虫",
     targets: ["蟻", "蜂", "蝶", "蛾", "蚊", "蝉", "蛍", "蠅", "虻", "蚕", "蚤", "虱", "蛭", "蜻", "螻", "蜩", "蟋", "蛆", "蛹", "螽"]
-  },
+　},
   {
     name: "地形",
     targets: ["山", "川", "谷", "丘", "島", "浜", "岸", "崖", "峰", "峠", "沼", "沢", "池", "湖", "滝", "森", "岬", "林", "湾", "瀬"]
@@ -1546,4 +1552,923 @@ function rollUpPoints(targetPoints, onComplete) {
 
     if (stepCount >= steps) {
       clearInterval(interval);
-      totalPoints =
+      totalPoints = targetPoints;
+      display.innerText = `⭐ ${totalPoints} pt`;
+      display.classList.remove('rolling');
+      if (onComplete) onComplete();
+    }
+  }, 35);
+}
+
+function renderProblemRows() {
+  const list = document.getElementById('idiom-list');
+  list.innerHTML = '';
+
+  currentIdioms.forEach((item, rowIndex) => {
+    const row = document.createElement('div');
+    row.className = 'idiom-row';
+
+    const meaning = document.createElement('div');
+    meaning.className = 'meaning-text';
+    meaning.innerText = item.meaning;
+
+    const slotsContainer = document.createElement('div');
+    slotsContainer.className = 'slots-container';
+
+    const reading = document.createElement('div');
+    reading.className = 'reading-display';
+    reading.id = `reading-${rowIndex}`;
+    reading.innerText = item.reading;
+    slotsContainer.appendChild(reading);
+
+    for (let c = 0; c < item.word.length; c++) {
+      const slot = document.createElement('div');
+      slot.className = 'drop-slot';
+      slot.dataset.rowIndex = rowIndex;
+      slot.dataset.slotIndex = c;
+      slot.ondragover = allowDrop;
+      slot.ondrop = dropToSlot;
+      slot.onclick = () => handleSlotClick(slot);
+      slotsContainer.appendChild(slot);
+    }
+
+    const hintBtn = document.createElement('button');
+    hintBtn.className = 'hint-btn';
+    hintBtn.innerText = 'ヒント';
+    hintBtn.onclick = (e) => {
+      e.stopPropagation();
+      showRowHint(rowIndex, hintBtn);
+    };
+
+    row.appendChild(meaning);
+    row.appendChild(slotsContainer);
+    row.appendChild(hintBtn);
+    list.appendChild(row);
+  });
+}
+
+function showRowHint(rowIndex, btn) {
+  if (usedHintsInStage[rowIndex]) return;
+  usedHintsInStage[rowIndex] = true;
+  btn.classList.add('used');
+  btn.innerText = 'ヒント済';
+  btn.disabled = true;
+
+  const targetIdiom = currentIdioms[rowIndex];
+  const firstSlot = document.querySelector(`.drop-slot[data-row-index="${rowIndex}"][data-slot-index="0"]`);
+  
+  if (firstSlot && !firstSlot.querySelector('.hint-text')) {
+    const hintSpan = document.createElement('span');
+    hintSpan.className = 'hint-text';
+    hintSpan.innerText = targetIdiom.word[0];
+    firstSlot.appendChild(hintSpan);
+  }
+
+  playSE('click');
+}
+
+function returnCardToPool(card) {
+  if (!card) return;
+  const originalSlot = document.getElementById(card.dataset.poolSlotId);
+  if (originalSlot) {
+    originalSlot.appendChild(card);
+  } else {
+    document.getElementById('card-pool').appendChild(card);
+  }
+}
+
+function renderCards() {
+  cleanupTouchState();
+  const pool = document.getElementById('card-pool');
+  pool.innerHTML = '';
+
+  let allChars = [];
+  currentIdioms.forEach(item => {
+    item.word.split('').forEach(char => allChars.push(char));
+  });
+  allChars.sort(() => Math.random() - 0.5);
+
+  allChars.forEach((char, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'pool-slot';
+    slot.id = `pool-slot-${i}`;
+
+    const card = document.createElement('div');
+    card.className = 'kanji-card';
+    card.innerText = char;
+    card.id = `card-${i}`;
+    card.dataset.poolSlotId = `pool-slot-${i}`;
+    card.draggable = true;
+
+    card.ondragstart = (e) => {
+      e.dataTransfer.setData('text', e.target.id);
+      selectCard(card);
+      playSE('click');
+    };
+
+    card.onclick = (e) => {
+      e.stopPropagation();
+      if (card.classList.contains('correct')) return;
+      selectCard(card);
+      playSE('click');
+    };
+
+    addTouchEvents(card);
+
+    slot.appendChild(card);
+    pool.appendChild(slot);
+  });
+}
+
+function addTouchEvents(card) {
+  const onTouchStart = (e) => {
+    if (card.classList.contains('correct')) return;
+    if (e.touches.length > 1) {
+      e.preventDefault();
+      cleanupTouchState();
+      return;
+    }
+    e.preventDefault();
+
+    cleanupTouchState();
+
+    const touch = e.touches[0];
+    draggedCard = card;
+    selectCard(card);
+    playSE('click');
+
+    const rect = card.getBoundingClientRect();
+    touchClone = card.cloneNode(true);
+    touchClone.classList.add('touch-drag-clone');
+    touchClone.style.position = 'fixed';
+    touchClone.style.left = `${rect.left}px`;
+    touchClone.style.top = `${rect.top}px`;
+    touchClone.style.width = `${rect.width}px`;
+    touchClone.style.height = `${rect.height}px`;
+    touchClone.style.zIndex = '1000';
+    touchClone.style.pointerEvents = 'none';
+    touchClone.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
+    touchClone.style.transform = 'scale(1.1)';
+    document.body.appendChild(touchClone);
+
+    touchStartX = touch.clientX - rect.left;
+    touchStartY = touch.clientY - rect.top;
+    card.style.opacity = '0.3';
+  };
+
+  const onTouchMove = (e) => {
+    if (!draggedCard || !touchClone) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    touchClone.style.left = `${touch.clientX - touchStartX}px`;
+    touchClone.style.top = `${touch.clientY - touchStartY}px`;
+  };
+
+  const onTouchEnd = (e) => {
+    if (!draggedCard) return;
+    const touch = e.changedTouches[0];
+    const currentCard = draggedCard;
+
+    cleanupTouchState();
+
+    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (dropTarget) {
+      const slot = dropTarget.closest('.drop-slot');
+      const pool = dropTarget.closest('#card-pool-container, #card-pool');
+
+      if (slot) {
+        handleSlotDrop(currentCard, slot);
+      } else if (pool) {
+        returnCardToPool(currentCard);
+        document.querySelectorAll('.drop-slot').forEach(s => {
+          if (!s.querySelector('.kanji-card')) s.classList.remove('filled');
+        });
+        selectCard(null);
+      }
+    }
+  };
+
+  const onTouchCancel = () => {
+    cleanupTouchState();
+  };
+
+  card.addEventListener('touchstart', onTouchStart, { passive: false });
+  card.addEventListener('touchmove', onTouchMove, { passive: false });
+  card.addEventListener('touchend', onTouchEnd);
+  card.addEventListener('touchcancel', onTouchCancel);
+}
+
+function handleSlotDrop(card, slot) {
+  const existingCard = slot.querySelector('.kanji-card');
+  if (existingCard && existingCard !== card) {
+    if (!existingCard.classList.contains('correct')) {
+      returnCardToPool(existingCard);
+    } else {
+      return;
+    }
+  }
+  slot.appendChild(card);
+  slot.classList.add('filled');
+  selectCard(null);
+  playSE('click');
+  checkRowCompletion(slot.dataset.rowIndex);
+}
+
+function selectCard(card) {
+  if (selectedCard) {
+    selectedCard.classList.remove('selected');
+  }
+  if (selectedCard === card) {
+    selectedCard = null;
+    return;
+  }
+  selectedCard = card;
+  if (card) {
+    card.classList.add('selected');
+  }
+}
+
+function handleSlotClick(slot) {
+  const existingCard = slot.querySelector('.kanji-card');
+  if (existingCard) {
+    if (!existingCard.classList.contains('correct')) {
+      returnCardToPool(existingCard);
+      slot.classList.remove('filled');
+      playSE('click');
+      if (selectedCard === existingCard) selectCard(null);
+    }
+  } else if (selectedCard) {
+    handleSlotDrop(selectedCard, slot);
+  }
+}
+
+function allowDrop(e) { e.preventDefault(); }
+
+function dropToSlot(e) {
+  e.preventDefault();
+  const cardId = e.dataTransfer.getData('text');
+  const card = document.getElementById(cardId);
+  const targetSlot = e.currentTarget;
+
+  if (!card) return;
+  handleSlotDrop(card, targetSlot);
+}
+
+function dropToPool(e) {
+  e.preventDefault();
+  const cardId = e.dataTransfer.getData('text');
+  const card = document.getElementById(cardId);
+  if (card) {
+    returnCardToPool(card);
+    document.querySelectorAll('.drop-slot').forEach(slot => {
+      if (!slot.querySelector('.kanji-card')) slot.classList.remove('filled');
+    });
+    selectCard(null);
+  }
+}
+
+function checkRowCompletion(rowIndex) {
+  const targetIdiom = currentIdioms[rowIndex];
+  const slots = document.querySelectorAll(`.drop-slot[data-row-index="${rowIndex}"]`);
+  let placedChars = '';
+
+  slots.forEach(slot => {
+    const card = slot.querySelector('.kanji-card');
+    if (card) {
+      placedChars += card.innerText;
+    }
+  });
+
+  if (placedChars.length === targetIdiom.word.length) {
+    if (placedChars === targetIdiom.word) {
+      playSE('correct');
+      document.getElementById(`reading-${rowIndex}`).classList.add('show');
+      slots.forEach(slot => {
+        const card = slot.querySelector('.kanji-card');
+        if (card) {
+          card.ondragstart = null;
+          card.onclick = null;
+          card.classList.remove('selected');
+          card.classList.add('correct');
+        }
+      });
+
+      const tilesToAdvance = usedHintsInStage[rowIndex] ? 1 : 2;
+      advancePosition(tilesToAdvance);
+      checkAllCompleted();
+    } else {
+      playSE('wrong');
+      setTimeout(() => {
+        slots.forEach(slot => {
+          const card = slot.querySelector('.kanji-card');
+          if (card && !card.classList.contains('correct')) {
+            returnCardToPool(card);
+            slot.classList.remove('filled');
+          }
+        });
+        penalizePosition(2);
+      }, 350);
+    }
+  }
+}
+
+function checkAllCompleted() {
+  const allRows = document.querySelectorAll('.idiom-row');
+  let completedCount = 0;
+  allRows.forEach(row => {
+    const slots = row.querySelectorAll('.drop-slot');
+    const isCorrect = Array.from(slots).every(s => {
+      const card = s.querySelector('.kanji-card');
+      return card && card.classList.contains('correct');
+    });
+    if (isCorrect) completedCount++;
+  });
+
+  if (completedCount === 5) {
+    playSE('milestone');
+    triggerConfetti();
+    
+    const remainingSec = Math.max(0, timer);
+    const stageGainedPoints = 50 + remainingSec;
+    const targetPoints = totalPoints + stageGainedPoints;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="stage-clear-banner">
+        <h2>🎉 5問全問クリア！</h2>
+        <p style="margin-bottom: 4px;">⭐ クリア 50pt ＋ 残り${remainingSec}秒 (${remainingSec}pt) ＝ <strong>＋${stageGainedPoints}pt</strong> 獲得！</p>
+      </div>
+    `;
+    document.getElementById('game-container').appendChild(modal);
+
+    setTimeout(() => {
+      modal.remove();
+      currentStage++;
+      
+      rollUpPoints(targetPoints, () => {
+        checkSpecialStageOrNext();
+      });
+    }, 1800);
+  }
+}
+
+function checkSpecialStageOrNext() {
+  if (totalPoints >= nextSpecialStageMilestone) {
+    nextSpecialStageMilestone += 500;
+    startSpecialStage();
+  } else {
+    startStage();
+  }
+}
+
+async function advancePosition(count) {
+  for (let step = 0; step < count; step++) {
+    if (currentPosition >= 50) break;
+
+    const prevTile = document.getElementById(`tile-${currentPosition}`);
+    if (prevTile && currentPosition > 0) {
+      prevTile.classList.remove('active-yellow');
+      prevTile.classList.add('active-green');
+    }
+
+    currentPosition++;
+
+    const currTile = document.getElementById(`tile-${currentPosition}`);
+    if (currTile) {
+      if (currentPosition < 50) {
+        currTile.classList.add('active-yellow');
+      } else {
+        currTile.classList.add('active-green');
+      }
+      currTile.classList.remove('tile-pop');
+      void currTile.offsetWidth;
+      currTile.classList.add('tile-pop');
+    }
+
+    playSE('click');
+    await new Promise(resolve => setTimeout(resolve, 380));
+  }
+
+  updateTrackUI();
+
+  if (currentPosition >= 50) {
+    currentPosition = 50;
+    clearInterval(timerInterval);
+    
+    triggerGoalOrbitAnimation(() => {
+      showGoalBonusBanner(() => {
+        showGoalModal();
+      });
+    });
+  }
+}
+
+async function penalizePosition(count) {
+  for (let step = 0; step < count; step++) {
+    if (currentPosition <= 0) break;
+
+    const currTile = document.getElementById(`tile-${currentPosition}`);
+    if (currTile) {
+      currTile.classList.remove('active-yellow', 'active-green', 'tile-pop');
+    }
+
+    currentPosition--;
+
+    const prevTile = document.getElementById(`tile-${currentPosition}`);
+    if (prevTile && currentPosition > 0) {
+      prevTile.classList.remove('active-green');
+      prevTile.classList.add('active-yellow');
+      prevTile.classList.remove('tile-pop');
+      void prevTile.offsetWidth;
+      prevTile.classList.add('tile-pop');
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+
+  updateTrackUI();
+}
+
+function showGoalBonusBanner(onComplete) {
+  playSE('fanfare');
+  triggerConfetti();
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="bonus-banner">
+      <h2>🎁 完走ボーナス！</h2>
+      <p style="font-size: 16px; color: #fef3c7;">外周50マス1周達成報酬！</p>
+      <div class="bonus-amount">+100 BONUS PT</div>
+    </div>
+  `;
+  document.getElementById('game-container').appendChild(modal);
+
+  const targetPoints = totalPoints + 100;
+
+  setTimeout(() => {
+    rollUpPoints(targetPoints, () => {
+      setTimeout(() => {
+        modal.remove();
+        if (onComplete) onComplete();
+      }, 500);
+    });
+  }, 1000);
+}
+
+function triggerGoalOrbitAnimation(onComplete) {
+  playSE('goal');
+  triggerConfetti();
+
+  let lapCount = 0;
+  let currentIndex = 0;
+  const totalTiles = 51;
+
+  const orbitInterval = setInterval(() => {
+    document.querySelectorAll('.track-tile').forEach(t => t.classList.remove('active-orbit'));
+
+    const tile = document.getElementById(`tile-${currentIndex}`);
+    if (tile) {
+      tile.classList.add('active-orbit');
+      playSE('orbit');
+    }
+
+    currentIndex++;
+    if (currentIndex >= totalTiles) {
+      currentIndex = 0;
+      lapCount++;
+    }
+
+    if (lapCount >= 2) {
+      clearInterval(orbitInterval);
+      document.querySelectorAll('.track-tile').forEach(t => t.classList.remove('active-orbit'));
+      if (onComplete) onComplete();
+    }
+  }, 30);
+}
+
+function showGoalModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-card">
+      <h2 class="win">🏆 ゴール達成！</h2>
+      <p>おめでとうございます！外周50マス完走！<br>現在ポイント: <strong>${totalPoints} pt</strong></p>
+      <div class="modal-btns">
+        <button class="btn btn-next" onclick="nextStageFromGoal(this)">つぎのステージへ</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('game-container').appendChild(modal);
+}
+
+function nextStageFromGoal(btn) {
+  cleanupTouchState();
+  btn.closest('.modal-overlay').remove();
+  currentPosition = 0;
+  updateTrackUI();
+  checkSpecialStageOrNext();
+}
+
+function startSpecialStage() {
+  cleanupTouchState();
+  const themeObj = SPECIAL_STAGE_THEMES[Math.floor(Math.random() * SPECIAL_STAGE_THEMES.length)];
+  
+  const shuffledTargets = [...themeObj.targets].sort(() => Math.random() - 0.5).slice(0, 15);
+  const shuffledDummies = [...DUMMY_KANJI_POOL].filter(k => !themeObj.targets.includes(k)).sort(() => Math.random() - 0.5).slice(0, 25);
+  
+  let panelsData = [
+    ...shuffledTargets.map(k => ({ kanji: k, isTarget: true })),
+    ...shuffledDummies.map(k => ({ kanji: k, isTarget: false }))
+  ].sort(() => Math.random() - 0.5);
+
+  let foundCount = 0;
+  let specialTimer = 30;
+  let specialTimerInterval = null;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="special-stage-container">
+      <div class="special-header">
+        <div class="special-title">⭐ 特別ボーナスステージ ⭐</div>
+        <div class="special-theme-box">テーマ：【 ${themeObj.name} 】（あと <span id="special-rem-count">15</span> / 15 個）</div>
+        <div class="special-timer" id="special-timer-display">⏱ 30秒</div>
+      </div>
+      <div class="special-grid" id="special-grid"></div>
+    </div>
+  `;
+  document.getElementById('game-container').appendChild(modal);
+
+  const grid = modal.querySelector('#special-grid');
+
+  panelsData.forEach((item) => {
+    const btn = document.createElement('div');
+    btn.className = 'special-panel';
+    btn.innerText = item.kanji;
+
+    btn.onclick = () => {
+      if (btn.classList.contains('hit') || btn.classList.contains('miss')) return;
+
+      if (item.isTarget) {
+        btn.classList.add('hit');
+        playSE('correct');
+        foundCount++;
+        modal.querySelector('#special-rem-count').innerText = 15 - foundCount;
+
+        if (foundCount >= 15) {
+          endSpecialStage(true);
+        }
+      } else {
+        btn.classList.add('miss');
+        playSE('wrong');
+        setTimeout(() => btn.classList.remove('miss'), 400);
+      }
+    };
+
+    grid.appendChild(btn);
+  });
+
+  playSE('fanfare');
+
+  specialTimerInterval = setInterval(() => {
+    specialTimer--;
+    const tDisp = modal.querySelector('#special-timer-display');
+    if (tDisp) tDisp.innerText = `⏱ ${specialTimer}秒`;
+
+    if (specialTimer <= 0) {
+      endSpecialStage(false);
+    }
+  }, 1000);
+
+  function endSpecialStage(allFound) {
+    clearInterval(specialTimerInterval);
+    playSE('milestone');
+    triggerConfetti();
+
+    const hitPoints = foundCount * 10;
+    const timePoints = Math.max(0, specialTimer) * 2;
+    const gained = hitPoints + timePoints;
+    const targetP = totalPoints + gained;
+
+    const resultModal = document.createElement('div');
+    resultModal.className = 'modal-overlay';
+    resultModal.innerHTML = `
+      <div class="stage-clear-banner">
+        <h2>${allFound ? '🎊 コンプリート達成！' : '⏱ 特別ステージ終了！'}</h2>
+        <p>正解数: <strong>${foundCount} / 15</strong> (${hitPoints}pt)</p>
+        <p>残り時間ボーナス: <strong>${specialTimer}秒</strong> (${timePoints}pt)</p>
+        <h3 style="font-size: 24px; color: #fef08a; margin-top: 10px;">合計 ＋${gained} pt 獲得！</h3>
+      </div>
+    `;
+    modal.remove();
+    document.getElementById('game-container').appendChild(resultModal);
+
+    setTimeout(() => {
+      resultModal.remove();
+      rollUpPoints(targetP, () => {
+        startStage();
+      });
+    }, 2200);
+  }
+}
+
+function handleTimeUp() {
+  playSE('timeup');
+  penalizePosition(5);
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-card">
+      <h2>⏰ タイムアップ！</h2>
+      <p>時間が切れました！マスが 5 つ戻ります。</p>
+      <div class="modal-btns">
+        <button class="btn btn-retry" onclick="retryStage(this)">もう一度挑戦</button>
+        <button class="btn btn-quit" onclick="resetGame(this)">最初から</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('game-container').appendChild(modal);
+}
+
+function retryStage(btn) {
+  cleanupTouchState();
+  btn.closest('.modal-overlay').remove();
+  startStage();
+}
+
+function resetGame(btn) {
+  cleanupTouchState();
+  btn.closest('.modal-overlay').remove();
+  currentPosition = 0;
+  currentStage = 1;
+  totalPoints = 0;
+  nextSpecialStageMilestone = 500;
+  updateTrackUI();
+  resetDeck();
+  showStartModal();
+}
+
+function showStartModal() {
+  cleanupTouchState();
+  const existingModal = document.getElementById('start-modal');
+  if (existingModal) existingModal.remove();
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'start-modal';
+  modal.innerHTML = `
+    <div class="start-hero-card">
+      <div class="puzzle-piece-container">
+        <svg viewBox="0 0 120 120" width="96" height="96">
+          <defs>
+            <linearGradient id="puzzleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#38bdf8" />
+              <stop offset="35%" stop-color="#818cf8" />
+              <stop offset="70%" stop-color="#c084fc" />
+              <stop offset="100%" stop-color="#f43f5e" />
+            </linearGradient>
+            <filter id="puzzleGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#a855f7" flood-opacity="0.6"/>
+            </filter>
+          </defs>
+          <path d="
+            M 36,36 
+            L 52,36 
+            C 48,22 42,14 60,14 
+            C 78,14 72,22 68,36 
+            L 84,36 
+            L 84,52 
+            C 98,48 106,42 106,60 
+            C 106,78 98,72 84,68 
+            L 84,84 
+            L 68,84 
+            C 72,98 78,106 60,106 
+            C 42,106 48,98 52,84 
+            L 36,84 
+            L 36,68 
+            C 50,72 58,78 58,60 
+            C 58,42 50,48 36,52 
+            Z" 
+            fill="url(#puzzleGrad)" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" filter="url(#puzzleGlow)"/>
+        </svg>
+      </div>
+      <div class="start-hero-badge">KANJI PUZZLE GAME</div>
+      <h1 class="start-hero-title">熟語パズル</h1>
+      <p class="start-hero-desc">
+        漢字カードをスワイプ！<br>
+        意味に合う熟語をすばやく完成させて<br>
+        50マスのゴールをめざそう！
+      </p>
+      <button class="start-play-btn" onclick="startGameFromModal(this)">GAME START</button>
+    </div>
+  `;
+  document.getElementById('game-container').appendChild(modal);
+}
+
+function startGameFromModal(btn) {
+  initAudio();
+  const modal = btn.closest('.modal-overlay');
+  if (modal) modal.remove();
+  startStage();
+}
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('sound-btn');
+  if (btn) {
+    btn.innerText = soundEnabled ? '🔊 ON' : '🔇 OFF';
+  }
+}
+
+function playSE(type) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+
+  try {
+    if (type === 'click') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } else if (type === 'correct') {
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+        gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.2);
+      });
+    } else if (type === 'wrong') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.linearRampToValueAtTime(120, now + 0.25);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (type === 'zoomIn') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(900, now + 0.3);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (type === 'rollup') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800 + Math.random() * 200, now);
+      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.03);
+    } else if (type === 'milestone' || type === 'fanfare') {
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+        gain.gain.setValueAtTime(0.25, now + idx * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.4);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.1);
+        osc.stop(now + idx * 0.1 + 0.4);
+      });
+    } else if (type === 'orbit') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400 + Math.random() * 600, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.005, now + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } else if (type === 'timeup') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(250, now);
+      osc.frequency.linearRampToValueAtTime(100, now + 0.5);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.5);
+    }
+  } catch (e) {
+    // Web Audioエラーの自動無視
+  }
+}
+
+function triggerConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+
+  const particles = [];
+  const colors = ['#f43f5e', '#38bdf8', '#34d399', '#fbbf24', '#a855f7', '#ec4899'];
+
+  for (let i = 0; i < 70; i++) {
+    particles.push({
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 14,
+      vy: (Math.random() - 0.8) * 14,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360,
+      vRot: (Math.random() - 0.5) * 10,
+      opacity: 1
+    });
+  }
+
+  let animationFrame;
+  function updateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let active = false;
+
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.3; // 重力
+      p.rotation += p.vRot;
+      p.opacity -= 0.015;
+
+      if (p.opacity > 0) {
+        active = true;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.globalAlpha = Math.max(0, p.opacity);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.restore();
+      }
+    });
+
+    if (active) {
+      animationFrame = requestAnimationFrame(updateConfetti);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      cancelAnimationFrame(animationFrame);
+    }
+  }
+
+  updateConfetti();
+}
+
+window.onload = function () {
+  initTrack();
+  resetDeck();
+  showStartModal();
+};
+</script>
+</body>
+</html>
