@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>熟語パズル</title>
  <meta property="og:title" content="熟語パズル">
-    <meta property="og:description" content="漢字を組み合わせて、意味に合う熟語を作るゲームです。">
+    <meta property="og:description" content="意味に合う熟語を作るゲームです。">
     <meta property="og:type" content="website">
 <style>
   * { 
@@ -812,7 +812,7 @@ body {
 
       <!-- 右側：漢字カード置き場 -->
       <div id="card-pool-container">
-        <div class="pool-title">漢字カード  (スワイプして動かそう)</div>
+        <div class="pool-title">漢字カード (スワイプ/タップ)</div>
         <div id="card-pool" ondragover="allowDrop(event)" ondrop="dropToPool(event)"></div>
       </div>
     </div>
@@ -1097,7 +1097,7 @@ const IDIOM_2CHAR_DATABASE = [
   { word: "公式", reading: "こうしき", meaning: "正式な形式・数式" },
   { word: "公開", reading: "こうかい", meaning: "広く一般に見せること" },
   { word: "公害", reading: "こうがい", meaning: "環境汚染による被害" },
-  { word: "構成", reading: "こうせい", meaning: "組み立てること" },
+  { word: "構成", reading: "こうせい", meaning: "組み立てて構成すること" },
   { word: "構造", reading: "こうぞう", meaning: "全体の仕組み・組み立て" },
   { word: "高度", reading: "こうど", meaning: "高さ・高いレベル" },
   { word: "高校", reading: "こうこう", meaning: "高等学校" },
@@ -1982,6 +1982,12 @@ function checkAllCompleted() {
 }
 
 function checkSpecialStageOrNext() {
+  // ゴール到達時は、完走ボーナスとゴール画面を優先する。
+  // 特別ボーナスステージは「つぎのステージへ」を押した後に判定する。
+  if (currentPosition >= 50) {
+    return;
+  }
+
   if (totalPoints >= nextSpecialStageMilestone) {
     nextSpecialStageMilestone += 500;
     startSpecialStage();
